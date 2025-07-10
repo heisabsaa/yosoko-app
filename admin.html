@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YoSoko - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div id="app-container" class="hidden">
+        <header class="bg-white shadow-md">
+            <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-gray-800">YoSoko Admin</h1>
+                <button id="logoutBtn" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">Logout</button>
+            </div>
+        </header>
+
+        <main class="container mx-auto p-6">
+            <section id="dashboard" class="mb-8">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-gray-500 text-sm font-medium">Total Users</h3>
+                        <p id="totalUsers" class="text-3xl font-bold text-blue-600 mt-2">...</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-gray-500 text-sm font-medium">Total Items for Sale</h3>
+                        <p id="totalItems" class="text-3xl font-bold text-green-600 mt-2">...</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-gray-500 text-sm font-medium">Items Sold</h3>
+                        <p id="itemsSold" class="text-3xl font-bold text-amber-600 mt-2">...</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="item-management">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">Manage Items</h2>
+                <div class="bg-white p-4 rounded-lg shadow overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price (TSh)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody" class="bg-white divide-y divide-gray-200">
+                            <tr><td colspan="5" class="text-center p-4">Loading items...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="auth-container" class="min-h-screen flex items-center justify-center">
+        <div class="text-center">
+            <h2 id="auth-message" class="text-2xl font-bold text-gray-700">Authenticating...</h2>
+            <p id="auth-sub-message" class="text-gray-500 mt-2">Please wait while we check your credentials.</p>
+        </div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Use the EXACT SAME Firebase config from your index.html ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyCl_we3jgOhq57qofvhfoXZq8K_lIvCp8s",
+          authDomain: "yosoko-88982.firebaseapp.com",
+          projectId: "yosoko-88982",
+          storageBucket: "yosoko-88982.appspot.com",
+          messagingSenderId: "611723664547",
+          appId: "1:611723664547:web:3d1e3a884dca8223957316",
+          measurementId: "G-T16BXNB1T6"
+        };
+        const appId = 'campus-bazaar-default';
+
+        // --- Firebase Initialization ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- DOM Elements ---
+        const appContainer = document.getElementById('app-container');
+        const authContainer = document.getElementById('auth-container');
+        const authMessage = document.getElementById('auth-message');
+        const authSubMessage = document.getElementById('auth-sub-message');
+
+        // --- Security Check ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user && !user.isAnonymous) {
+                // User is logged in, check if they are an admin
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+
+                if (userDocSnap.exists() && userDocSnap.data().isAdmin === true) {
+                    // --- ACCESS GRANTED ---
+                    authContainer.classList.add('hidden');
+                    appContainer.classList.remove('hidden');
+                    initializeAppPanel();
+                } else {
+                    // --- ACCESS DENIED ---
+                    authMessage.textContent = '⛔ Access Denied';
+                    authSubMessage.textContent = 'You do not have permission to view this page. Please contact the administrator.';
+                }
+            } else {
+                // --- NOT LOGGED IN ---
+                authMessage.textContent = 'Login Required';
+                authSubMessage.innerHTML = `Please <a href="/index.html" class="text-blue-500 underline">log in</a> on the main site first and then return to this page.`;
+            }
+        });
+
+        // --- Main App Logic ---
+        function initializeAppPanel() {
+            updateDashboardStats();
+            renderItemsTable();
+
+            document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+            
+            // Add event listener for delete buttons (using event delegation)
+            document.getElementById('itemsTableBody').addEventListener('click', async (e) => {
+                if (e.target.classList.contains('delete-btn')) {
+                    const itemId = e.target.dataset.id;
+                    if (confirm(`Are you sure you want to delete this item? This action cannot be undone.`)) {
+                        try {
+                            // The path to the items collection
+                            const itemDocRef = doc(db, `artifacts/${appId}/public/data/items`, itemId);
+                            await deleteDoc(itemDocRef);
+                            alert('Item deleted successfully.');
+                            // Refresh the table and stats
+                            renderItemsTable();
+                            updateDashboardStats();
+                        } catch (error) {
+                            console.error("Error deleting item: ", error);
+                            alert('Failed to delete item. Check the console for errors.');
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Feature #3: Dashboard Stats ---
+        async function updateDashboardStats() {
+            // Total Users
+            const usersSnapshot = await getDocs(collection(db, "users"));
+            document.getElementById('totalUsers').textContent = usersSnapshot.size;
+
+            // Total Items (path from your index.html)
+            const itemsColRef = collection(db, `artifacts/${appId}/public/data/items`);
+            const itemsSnapshot = await getDocs(itemsColRef);
+            document.getElementById('totalItems').textContent = itemsSnapshot.size;
+
+            // Sold Items
+            const soldQuery = query(itemsColRef, where("status", "==", "sold"));
+            const soldSnapshot = await getDocs(soldQuery);
+            document.getElementById('itemsSold').textContent = soldSnapshot.size;
+        }
+
+        // --- Feature #2: Item Management ---
+        async function renderItemsTable() {
+            const tableBody = document.getElementById('itemsTableBody');
+            const itemsColRef = collection(db, `artifacts/${appId}/public/data/items`);
+            const itemsSnapshot = await getDocs(itemsColRef);
+
+            if (itemsSnapshot.empty) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4">No items found.</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = ''; // Clear loading message
+            itemsSnapshot.forEach(doc => {
+                const item = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${item.title}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-600">${item.sellerEmail}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-600">${Number(item.price).toLocaleString()}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.status === 'sold' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
+                            ${item.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button data-id="${doc.id}" class="delete-btn text-red-600 hover:text-red-900">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>

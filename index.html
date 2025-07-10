@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YoSoko</title>
+    <link rel="icon" href="images/favicon-96x96.png" type="image/png">
+    <link rel="apple-touch-icon" href="images/favicon-96x96.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .modal-backdrop { background-color: rgba(0, 0, 0, 0.6); }
+        .modal { transition: opacity 0.3s ease, transform 0.3s ease; }
+        .hidden-modal { opacity: 0; transform: scale(0.95); pointer-events: none; }
+        .visible-modal { opacity: 1; transform: scale(1); pointer-events: auto; }
+        .loader { border-top-color: #1e40af; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Tanzanian Vibe Color Scheme */
+        :root {
+            --primary-green: #10B981; /* Emerald 500 */
+            --primary-yellow: #F59E0B; /* Amber 500 */
+            --primary-blue: #3B82F6; /* Blue 500 */
+            --dark-text: #1F2937; /* Gray 800 */
+        }
+        .category-btn.active { background-color: var(--primary-blue); color: white; }
+        .favorite-btn.saved svg { fill: #ef4444; stroke: #ef4444; } /* Red 500 */
+        /* Add these styles for the toast notifications */
+        #toast-container .toast {
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #toast-container .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        #toast-container .toast-success { background-color: #10B981; } /* Emerald 500 */
+        #toast-container .toast-error { background-color: #EF4444; } /* Red 500 */
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+
+
+    <header class="bg-white shadow-md sticky top-0 z-40">
+    <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <div class="flex items-center cursor-pointer" id="home-btn">
+                <img src="images/logo-main.png" alt="YoSoko Logo" class="h-10">
+            </div>
+            <h1>YoSoko</h1>
+            <div class="flex md:hidden">
+                <button id="mobileMenuBtn" class="p-2 rounded focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)]">
+                    <svg class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="hidden md:flex items-center space-x-2 md:space-x-4">
+                <div id="view-toggle-buttons" class="flex items-center bg-gray-200 rounded-full p-1">
+                    <button id="forSaleViewBtn" class="px-3 py-1 text-sm font-semibold rounded-full bg-white text-[var(--primary-blue)] shadow">For Sale</button>
+                    <button id="wantedViewBtn" class="px-3 py-1 text-sm font-semibold rounded-full text-gray-600">Wanted</button>
+                </div>
+                <button id="chatsBtn" class="hidden p-2 rounded-full hover:bg-gray-100"> <svg class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                </button>
+                <button id="favoritesBtn" class="hidden p-2 rounded-full hover:bg-gray-100">
+                    <svg class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" /></svg>
+                </button>
+                <button id="profileBtn" class="hidden p-2 rounded-full hover:bg-gray-100">
+                    <svg class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                </button>
+                <button id="sellItemBtn" class="hidden bg-[var(--primary-green)] text-white px-4 py-2 rounded-md hover:opacity-90 transition">Sell</button>
+                <div id="auth-container"></div>
+            </div>
+        </div>
+        <div id="mobileMenu" class="md:hidden hidden bg-white border-t">
+            <div class="flex flex-col p-4 space-y-2">
+                <div id="mobile-view-toggle-buttons" class="flex items-center bg-gray-200 rounded-full p-1 mb-2">
+                    <button id="mobileForSaleViewBtn" class="px-3 py-1 text-sm font-semibold rounded-full bg-white text-[var(--primary-blue)] shadow">For Sale</button>
+                    <button id="mobileWantedViewBtn" class="px-3 py-1 text-sm font-semibold rounded-full text-gray-600">Wanted</button>
+                </div>               
+                <button id="mobileChatsBtn" class="hidden p-2 rounded-full hover:bg-gray-100 flex items-center"> <svg class="h-6 w-6 text-gray-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                    My Chats
+                </button>
+                <button id="mobileFavoritesBtn" class="p-2 rounded-full hover:bg-gray-100 flex items-center">
+                    <svg class="h-6 w-6 text-gray-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" /></svg>
+                    Favorites
+                </button>
+                <button id="mobileProfileBtn" class="p-2 rounded-full hover:bg-gray-100 flex items-center">
+                    <svg class="h-6 w-6 text-gray-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    Profile
+                </button>
+                <button id="mobileSellItemBtn" class="bg-[var(--primary-green)] text-white px-4 py-2 rounded-md hover:opacity-90 transition w-full flex items-center justify-center">
+                    <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    Sell
+                </button>
+                <div id="mobile-auth-container"></div>
+            </div>
+        </div>
+    </nav>
+</header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8 flex-grow">
+        <div
+        class="relative bg-cover bg-center rounded-lg shadow-lg mb-8 h-80 sm:h-96 flex items-center justify-center text-center text-white"
+        style="background-image: url('images/herosection.jpg');"
+        >
+        <div class="absolute inset-0 bg-black opacity-50 rounded-lg"></div>
+
+        <div class="relative z-10 p-4">
+            <h1 class="text-3xl sm:text-5xl md:text-6xl font-bold leading-tight">
+            Campus Marketplace <br> for Students
+            </h1>
+            <p class="mt-4 text-base sm:text-xl font-light">
+            <br>Find amazing deals from fellow students or make extra cash by selling your stuff.</br>
+            <br>Peer‑to‑peer campus trading made simple.
+            Buy, sell, and trade items easily on campus!
+            </p>
+            <div class="mt-8">
+            <button id="postAdHeroBtn" class="bg-[var(--primary-blue)] text-white px-8 py-3 rounded-full hover:opacity-90 transition-transform hover:scale-105 font-semibold text-lg">
+                SELL YOUR ITEM NOW
+            </button>
+            </div>
+        </div>
+        </div>
+        <div class="flex justify-between items-center mb-6">
+            <h2 id="pageTitle" class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">For Sale</h2>
+            <div class="relative hidden sm:block">
+                <input id="searchInput" type="text" placeholder="Search items..." class="bg-white rounded-full py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] w-64">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                </div>
+            </div>
+            <button id="openFiltersBtn" class="ml-4 p-2 bg-white rounded-full shadow-md sm:hidden">
+                <svg class="h-6 w-6 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4 4m0 0l4-4m-4 4v-8" />
+                </svg>
+            </button>
+        </div>
+        
+        
+
+        <div id="items-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+        <div id="wanted-grid" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+
+        <div id="loading-indicator" class="text-center py-10"><div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-24 w-24 mx-auto"></div><p class="mt-4 text-gray-600">Loading...</p></div>
+        <div id="no-items-message" class="hidden text-center py-10"><p class="text-gray-600 text-lg">No items found. Why not be the first? Click at the top right corner and choose Post an Ad</p></div>
+    </main>
+
+    <div id="authModal" class="fixed inset-0 z-[51] flex items-center justify-center modal-backdrop hidden-modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md m-4 p-8 modal relative">
+            <button id="closeAuthModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">&times;</button>
+            <h2 id="authModalTitle" class="text-2xl font-bold text-center mb-6">Login</h2>
+            <div id="authError" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
+            <form id="authForm">
+                <input type="email" id="email" autocomplete="email" placeholder="Email" required class="mb-4 w-full p-2 border rounded">
+                <input type="password" id="password" autocomplete="current-password" placeholder="Password" required class="mb-4 w-full p-2 border rounded">
+                <button type="submit" id="authSubmitBtn" class="w-full bg-[var(--primary-blue)] text-white py-2 rounded">Login</button>
+            </form>
+            </form> <div class="my-4 flex items-center">
+                <div class="flex-grow border-t border-gray-300"></div>
+                <span class="flex-shrink mx-4 text-gray-400 text-sm">OR</span>
+                <div class="flex-grow border-t border-gray-300"></div>
+            </div>
+            <button id="googleSignInBtn" class="w-full bg-white border border-gray-300 text-gray-700 py-2 rounded flex items-center justify-center shadow-sm hover:bg-gray-50">
+                <svg class="h-5 w-5 mr-2" viewBox="0 0 48 48"><g><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.27 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></g></svg>
+                Sign in with Google
+            </button>
+            <a href="#" id="authToggleLink" class="block text-center mt-4 text-sm text-[var(--primary-blue)]">Need an account? Sign Up</a>
+            <a href="#" id="forgotPasswordLink" class="block text-center mt-2 text-sm text-gray-500 hover:underline">Forgot Password?</a>
+        </div>
+    </div>
+
+    <div id="chatModal" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden-modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg m-4 modal flex flex-col" style="height: 70vh;">
+            <div class="p-4 border-b">
+                <h2 id="chatModalTitle" class="text-xl font-bold">Chat</h2>
+                <button id="closeChatModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            <div id="chat-messages-container" class="flex-grow p-4 overflow-y-auto space-y-4">
+                </div>
+            <div class="p-4 border-t">
+                <form id="chatForm" class="flex space-x-2">
+                    <input type="text" id="chat-message-input" placeholder="Type a message..." required class="flex-grow p-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)]">
+                    <button type="submit" class="bg-[var(--primary-blue)] text-white rounded-full p-2.5 flex items-center justify-center">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="inboxModal" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden-modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md m-4 p-6 modal relative max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h2 class="text-2xl font-bold">My Chats</h2>
+                <button id="closeInboxModal" class="text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            <div id="inbox-list" class="overflow-y-auto space-y-3">
+                <p id="inbox-loading" class="text-gray-500">Loading your conversations...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="profileModal" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden-modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md m-4 p-8 modal relative">
+            <button id="closeProfileModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">&times;</button>
+            <h2 class="text-2xl font-bold text-center mb-6">My Profile</h2>
+            <form id="profileForm">
+                <div class="mb-4">
+                    <label for="profilePhone" class="block text-sm font-medium text-gray-700">Phone Number (for WhatsApp/Call)</label>
+                    <input type="tel" id="profilePhone" placeholder="e.g. 0712345678" class="mt-1 w-full p-2 border rounded">
+                </div>
+                <button type="submit" class="w-full bg-[var(--primary-green)] text-white py-2 rounded">Save Profile</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="itemFormModal" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden-modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg m-4 modal">
+            <form id="itemForm" class="p-8">
+                <h2 id="itemFormTitle" class="text-2xl font-bold mb-6">List Your Item</h2>
+                <div id="itemFormError" class="hidden bg-red-100 border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
+                <div class="grid grid-cols-1 gap-6">
+                    <input type="text" id="itemTitle" placeholder="Title" required class="w-full p-2 border rounded">
+                    <textarea id="itemDescription" placeholder="Description" required rows="3" class="w-full p-2 border rounded"></textarea>
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="number" id="itemPrice" placeholder="Price (TSh)" required class="w-full p-2 border rounded">
+                        <select id="itemCategory" required class="w-full p-2 border rounded bg-white"></select>
+                    </div>
+                    <div>
+                        <label for="itemCampus" class="block text-sm font-medium text-gray-700 mb-1">Campus Location</label>
+                        <select id="itemCampus" required class="w-full p-2 border rounded bg-white"></select>
+                    </div>                    
+                    <div>
+                        <input type="file" id="itemImage" accept="image/*" required multiple class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-semibold file:bg-blue-50 file:text-[var(--primary-blue)] hover:file:bg-blue-100" />
+                        <p class="mt-1 text-xs text-gray-500">You can upload up to 4 images.</p>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-3">
+                    <button type="button" id="cancelItemForm" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md">Cancel</button>
+                    <button type="submit" id="submitItemForm" class="bg-[var(--primary-blue)] text-white px-4 py-2 rounded-md flex items-center">
+                        <span id="submitItemFormText">List Item</span>
+                        <div id="submitItemFormSpinner" class="hidden loader h-5 w-5 ml-2"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="filtersModal" class="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center modal-backdrop hidden-modal">
+        <div class="bg-white rounded-t-lg sm:rounded-lg shadow-xl w-full max-w-md m-0 sm:m-4 modal p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Filters</h2>
+                <button id="closeFiltersModal" class="text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 text-gray-700">Category</h3>
+                    <div id="category-radio-filters" class="space-y-2">
+                        </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 text-gray-700">Campus</h3>
+                    <div id="campus-radio-filters" class="space-y-2">
+                        </div>
+                </div>
+
+                <div class="flex items-center pt-4 border-t">
+                    <input type="checkbox" id="showSoldToggleModal" class="h-4 w-4 rounded border-gray-300 text-[var(--primary-blue)] focus:ring-[var(--primary-blue)]">
+                    <label for="showSoldToggleModal" class="ml-2 block text-sm text-gray-900">Show Sold Items</label>
+                </div>
+            </div>
+            
+            <div class="mt-8">
+                <button id="applyFiltersBtn" class="w-full bg-[var(--primary-blue)] text-white py-3 rounded-lg font-semibold">Show Results</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="itemDetailModal" class="fixed inset-0 z-[51] flex items-center justify-center modal-backdrop hidden-modal">
+        <div id="itemDetailContent" class="bg-white rounded-lg shadow-xl w-full max-w-3xl m-4 modal relative max-h-[90vh] overflow-y-auto"></div>
+    </div>
+    
+    <div id="userViewModal" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden-modal">
+         <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl m-4 modal relative max-h-[90vh] overflow-y-auto">
+            <button id="closeUserViewModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10">&times;</button>
+            <div id="userViewContent"></div>
+         </div>
+    </div>
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, signInAnonymously, signInWithCustomToken, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, doc, deleteDoc, getDoc, setDoc, updateDoc, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- App Configuration ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'campus-bazaar-default';
+        const firebaseConfig = {
+          apiKey: "AIzaSyCl_we3jgOhq57qofvhfoXZq8K_lIvCp8s",
+          authDomain: "yosoko-88982.firebaseapp.com",
+          projectId: "yosoko-88982",
+          storageBucket: "yosoko-88982.appspot.com",
+          messagingSenderId: "611723664547",
+          appId: "1:611723664547:web:3d1e3a884dca8223957316",
+          measurementId: "G-T16BXNB1T6"
+        };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const CATEGORIES = ["All", "Books", "Electronics", "Ghetto", "Furniture", "Clothing", "Other"];
+        const CAMPUSES = ["All", "UDSM", "UDOM", "IFM", "TIA", "NIT", "Other"]; // Add this line
+        const IMGBB_API_KEY = "d2bc41e7f54beb2f80e59d3302910743";
+
+        // --- Firebase Initialization ---
+        let app, auth, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (e) { console.error("Firebase Init Error:", e); }
+
+        // --- DOM Elements ---
+        const DOMElements = {
+            auth: document.getElementById('auth-container'),
+            sellBtn: document.getElementById('sellItemBtn'),
+            profileBtn: document.getElementById('profileBtn'),
+            favoritesBtn: document.getElementById('favoritesBtn'),
+            homeBtn: document.getElementById('home-btn'),
+            itemsGrid: document.getElementById('items-grid'),
+            wantedGrid: document.getElementById('wanted-grid'),
+            loading: document.getElementById('loading-indicator'),
+            noItems: document.getElementById('no-items-message'),
+            searchInput: document.getElementById('searchInput'),
+            searchInputMobile: document.getElementById('searchInputMobile'),
+            chatsBtn: document.getElementById('chatsBtn'),
+            categoryFilters: document.getElementById('category-filters'),
+            pageTitle: document.getElementById('pageTitle'),
+            viewToggles: {
+                forSale: document.getElementById('forSaleViewBtn'),
+                wanted: document.getElementById('wantedViewBtn'),
+            },
+            modals: {
+                auth: document.getElementById('authModal'),
+                profile: document.getElementById('profileModal'),
+                itemForm: document.getElementById('itemFormModal'),
+                itemDetail: document.getElementById('itemDetailModal'),
+                chat: document.getElementById('chatModal'),
+                inbox: document.getElementById('inboxModal'),
+                userView: document.getElementById('userViewModal'),
+                filters: document.getElementById('filtersModal'),
+            },
+            forms: {
+                auth: document.getElementById('authForm'),
+                profile: document.getElementById('profileForm'),
+                item: document.getElementById('itemForm'),
+            },
+            mobile: {
+                sellBtn: document.getElementById('mobileSellItemBtn'),
+                profileBtn: document.getElementById('mobileProfileBtn'),
+                favoritesBtn: document.getElementById('mobileFavoritesBtn'),
+                auth: document.getElementById('mobile-auth-container'),
+                menu: document.getElementById('mobileMenu'),
+                chatsBtn: document.getElementById('mobileChatsBtn'),
+                forSaleBtn: document.getElementById('mobileForSaleViewBtn'),
+                wantedBtn: document.getElementById('mobileWantedViewBtn'),
+            }
+        };
+
+        // --- The NEW, SIMPLER functions for NON-REAL-TIME messaging ---
+
+        let currentChatId = null; // This still helps us know which chat is open
+
+        function renderMessages(messages) {
+            const container = document.getElementById('chat-messages-container');
+            container.innerHTML = messages.map(msg => {
+                const isMe = msg.senderId === state.currentUser.uid;
+                // A simple way to show who sent the message
+                const senderName = isMe ? 'You' : (state.currentView === 'forSale' ? 'Seller' : 'Buyer');
+                return `
+                    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                        <div class="px-4 py-2 rounded-lg max-w-xs ${isMe ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}">
+                            <p>${msg.text}</p>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">${new Date(msg.timestamp?.toDate()).toLocaleTimeString('en-TZ', { hour: 'numeric', minute: '2-digit' })}</p>
+                    </div>
+                `;
+            }).join('');
+            // Scroll to the bottom to see the latest messages
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function openInbox() {
+            const inboxList = document.getElementById('inbox-list');
+            inboxList.innerHTML = '<p id="inbox-loading" class="text-gray-500">Loading your conversations...</p>';
+            toggleModal(DOMElements.modals.inbox, true);
+
+            try {
+                const q = query(collection(db, 'chats'), where('participants', 'array-contains', state.currentUser.uid));
+                const chatsSnapshot = await getDocs(q);
+
+                if (chatsSnapshot.empty) {
+                    inboxList.innerHTML = '<p class="text-gray-500 text-center">You have no active chats.</p>';
+                    return;
+                }
+
+                inboxList.innerHTML = ''; // Clear the "Loading..." message
+
+                chatsSnapshot.docs.forEach(doc => {
+                    const chat = doc.data();
+                    
+                    const chatElement = document.createElement('div');
+                    chatElement.className = 'p-4 hover:bg-gray-100 rounded-lg cursor-pointer border-b';
+                    chatElement.innerHTML = `
+                        <p class="font-semibold truncate">Re: ${chat.itemInfo.title}</p>
+                        <p class="text-sm text-gray-600 truncate">${chat.lastMessage || 'Click to start chatting...'}</p>
+                    `;
+                    
+                    chatElement.addEventListener('click', () => {
+                        toggleModal(DOMElements.modals.inbox, false);
+                        
+                        const sellerId = doc.id.split('_')[1];
+                        const sellerEmail = "Seller"; // Placeholder, can be improved later
+                        
+                        openChat(sellerId, chat.itemInfo.id, chat.itemInfo.title, sellerEmail);
+                    });
+                    inboxList.appendChild(chatElement);
+                });
+
+            } catch (error) {
+                console.error("Error fetching chats:", error);
+                inboxList.innerHTML = '<p class="text-red-500 text-center">Could not load chats. Please try again later.</p>';
+            }
+        }
+
+        // Add this entire function back into your script
+        async function sendMessage() {
+            const input = document.getElementById('chat-message-input');
+            const text = input.value.trim();
+            if (!text || !currentChatId) return;
+
+            const messagesColRef = collection(db, 'chats', currentChatId, 'messages');
+            try {
+                // Add the new message to the database
+                await addDoc(messagesColRef, {
+                    text: text,
+                    senderId: state.currentUser.uid,
+                    timestamp: serverTimestamp()
+                });
+
+                // Update the "last message" field on the parent chat document for previews
+                const chatDocRef = doc(db, 'chats', currentChatId);
+                await updateDoc(chatDocRef, {
+                    lastMessage: text,
+                    lastMessageTimestamp: serverTimestamp()
+                });
+
+                input.value = ''; // Clear the input box
+            } catch (error) {
+                console.error("Error sending message:", error);
+                showToast("Could not send message.", "error");
+            }
+        }
+
+        // Replace your old openChat function with this one
+        async function openChat(sellerId, itemId, itemTitle, sellerEmail = 'Seller') {
+            if (!state.currentUser || state.currentUser.isAnonymous) {
+                showToast("Please log in to send a message.", "error");
+                toggleModal(DOMElements.modals.auth, true);
+                return;
+            }
+
+            if (state.unsubscribe.chat) {
+                state.unsubscribe.chat(); 
+            }
+
+            currentChatId = `${state.currentUser.uid}_${sellerId}_${itemId}`;
+            const chatDocRef = doc(db, 'chats', currentChatId);
+            const messagesColRef = collection(chatDocRef, 'messages');
+
+            try {
+                const chatDoc = await getDoc(chatDocRef);
+                if (!chatDoc.exists()) {
+                    await setDoc(chatDocRef, {
+                        participants: [state.currentUser.uid, sellerId],
+                        itemInfo: { id: itemId, title: itemTitle },
+                        createdAt: serverTimestamp()
+                    });
+                }
+            
+                const chatModalTitle = document.getElementById('chatModalTitle');
+                chatModalTitle.innerHTML = `
+                    <p class="font-bold text-lg">Chat with ${sellerEmail}</p>
+                    <p class="text-sm text-gray-500">About: ${itemTitle}</p>
+                `;
+                toggleModal(document.getElementById('chatModal'), true);
+            
+                // This query now works and will listen for real-time updates
+                const q = query(messagesColRef, orderBy('timestamp'));
+                state.unsubscribe.chat = onSnapshot(q, (messagesSnapshot) => {
+                    const messages = messagesSnapshot.docs.map(doc => doc.data());
+                    renderMessages(messages);
+                }, (error) => {
+                    console.error("Error listening to chat messages:", error);
+                    // This is where you might see an error about a missing index.
+                    // If you do, check the browser console for a link to create it in Firebase.
+                    document.getElementById('chat-messages-container').innerHTML = `<p class="text-center text-red-500">Could not load messages.</p>`;
+                });
+
+            } catch (error) {
+                console.error("Error opening chat:", error);
+                showToast("Could not open chat.", "error");
+            }
+        }
+
+        // --- Add this new Toast function ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            // Animate in
+            setTimeout(() => toast.classList.add('show'), 10);
+
+            // Animate out and remove after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 3000);
+        }
+
+        // --- State Management ---
+        let state = {
+            isLoginMode: true,
+            currentUser: null,
+            userData: {},
+            allItems: [],
+            wantedItems: [],
+            currentCategory: 'All',
+            currentCampus: 'All', // Add this
+            currentSearch: '',
+            currentView: 'forSale', // forSale, wanted, favorites
+            showSold: false, // Add this line
+            unsubscribe: { items: null, wanted: null, chat: null },
+        };
+
+        // --- Generic Functions ---
+        const toggleModal = (modal, show) => modal.classList.toggle('hidden-modal', !show);
+        const formatPrice = (price) => `TSh ${Number(price).toLocaleString('en-US')}`;
+
+        // --- Auth ---
+        // Replace your entire onAuthStateChanged function with this one
+        onAuthStateChanged(auth, async user => {
+            if (user) {
+                // A user is signed in (either returning or just logged in).
+                state.currentUser = user;
+                updateAuthUI(user);
+
+                if (!user.isAnonymous) {
+                    await fetchUserData();
+                    // Show all buttons for a real user
+                    DOMElements.sellBtn.classList.remove('hidden');
+                    DOMElements.profileBtn.classList.remove('hidden');
+                    DOMElements.favoritesBtn.classList.remove('hidden');
+                    DOMElements.chatsBtn.classList.remove('hidden');
+                    DOMElements.mobile.chatsBtn.classList.remove('hidden');
+                }
+                fetchItems();
+                fetchWantedItems();
+            } else {
+                // No user is signed in. Sign them in anonymously for Browse.
+                signInAnonymously(auth).catch(error => {
+                    console.error("Anonymous sign-in failed:", error);
+                });
+                // Note: After anonymous sign-in, this onAuthStateChanged function
+                // will automatically run AGAIN with the new anonymous user.
+                updateAuthUI(null);
+                DOMElements.sellBtn.classList.add('hidden');
+                DOMElements.profileBtn.classList.add('hidden');
+                DOMElements.favoritesBtn.classList.add('hidden');
+                DOMElements.chatsBtn.classList.add('hidden');
+                DOMElements.mobile.chatsBtn.classList.add('hidden');
+            }
+        });
+        
+
+        function updateAuthUI(user) {
+            DOMElements.auth.innerHTML = '';
+            DOMElements.mobile.auth.innerHTML = '';
+            // If the user exists AND is not anonymous, show Logout
+            if (user && !user.isAnonymous) {
+                DOMElements.auth.innerHTML = `<button id="logoutBtn" class="bg-gray-200 text-gray-700 px-3 py-2 rounded-md text-sm">Logout</button>`;
+                DOMElements.mobile.auth.innerHTML = `<button id="mobileLogoutBtn" class="bg-gray-200 text-gray-700 px-3 py-2 rounded-md text-sm w-full">Logout</button>`;
+                document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+                document.getElementById('mobileLogoutBtn').addEventListener('click', () => {
+                    signOut(auth);
+                    DOMElements.mobile.menu.classList.add('hidden'); // Hide menu after logout
+                });
+            } else { // If user is null or is anonymous, show Login
+                DOMElements.auth.innerHTML = `<button id="loginBtn" class="bg-[var(--primary-blue)] text-white px-4 py-2 rounded-md">Login</button>`;
+                DOMElements.mobile.auth.innerHTML = `<button id="mobileLoginBtn" class="bg-[var(--primary-blue)] text-white px-4 py-2 rounded-md w-full">Login</button>`;
+                document.getElementById('loginBtn').addEventListener('click', () => toggleModal(DOMElements.modals.auth, true));
+                document.getElementById('mobileLoginBtn').addEventListener('click', () => {
+                    toggleModal(DOMElements.modals.auth, true);
+                    DOMElements.mobile.menu.classList.add('hidden'); // Hide menu after login
+                });
+            }
+        }
+
+        // --- Data Fetching & User Data ---
+        async function fetchUserData() {
+            if (!state.currentUser || state.currentUser.isAnonymous) return;
+            const userDocRef = doc(db, `users/${state.currentUser.uid}`);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                state.userData = userDoc.data();
+            } else {
+                await setDoc(userDocRef, { email: state.currentUser.email, phone: '', favoriteItems: [] });
+                state.userData = { email: state.currentUser.email, phone: '', favoriteItems: [] };
+            }
+        }
+
+        const fetchItems = () => {
+            if (state.unsubscribe.items) state.unsubscribe.items();
+            const q = query(collection(db, `artifacts/${appId}/public/data/items`));
+            state.unsubscribe.items = onSnapshot(q, snapshot => {
+                state.allItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                filterAndRender();
+            });
+        };
+        
+        const fetchWantedItems = () => {
+            if (state.unsubscribe.wanted) state.unsubscribe.wanted();
+            const q = query(collection(db, `artifacts/${appId}/public/data/wanted`));
+            state.unsubscribe.wanted = onSnapshot(q, snapshot => {
+                state.wantedItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (state.currentView === 'wanted') filterAndRender();
+            });
+        };
+        
+        // --- Rendering ---
+        function filterAndRender() {
+            DOMElements.loading.style.display = 'none';
+            let itemsToRender = [];
+            if (state.currentView === 'forSale') {
+                itemsToRender = state.allItems;
+                if (!state.showSold) {
+                    itemsToRender = itemsToRender.filter(item => item.status !== 'sold');
+                }
+                if (state.currentCategory !== 'All') {
+                    itemsToRender = itemsToRender.filter(item => item.category === state.currentCategory);
+                }
+            } else if (state.currentView === 'wanted') {
+                 itemsToRender = state.wantedItems;
+                 if (state.currentCategory !== 'All') {
+                    itemsToRender = itemsToRender.filter(item => item.category === state.currentCategory);
+                }
+            } else if (state.currentView === 'favorites') {
+                // Ensure we only try to filter favorites if a real user is logged in
+                if (state.currentUser && !state.currentUser.isAnonymous) {
+                    itemsToRender = state.allItems.filter(item => state.userData.favoriteItems?.includes(item.id));
+                }
+            }
+
+            if (state.currentSearch) {
+                const search = state.currentSearch.toLowerCase();
+                itemsToRender = itemsToRender.filter(item => 
+                    item.title.toLowerCase().includes(search) || 
+                    item.description.toLowerCase().includes(search)
+                );
+            }
+            if (state.currentCampus !== 'All') {
+                itemsToRender = itemsToRender.filter(item => item.campus === state.currentCampus);
+            }
+            
+            if (state.currentView === 'wanted') {
+                renderWantedGrid(itemsToRender);
+            } else {
+                renderItemsGrid(itemsToRender);
+            }
+        }
+
+        function renderItemsGrid(items) {
+            DOMElements.itemsGrid.innerHTML = '';
+            if (items.length === 0) { DOMElements.noItems.classList.remove('hidden'); return; }
+            DOMElements.noItems.classList.add('hidden');
+            items.forEach(item => {
+                const isOwner = state.currentUser?.uid === item.sellerId;
+                const isFavorite = state.userData.favoriteItems?.includes(item.id);
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-lg shadow-md overflow-hidden group relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1";
+                card.setAttribute('data-id', item.id);
+                // Use first image from imageUrls if available, else fallback to imageUrl
+                const mainImage = Array.isArray(item.imageUrls) && item.imageUrls.length > 0 ? item.imageUrls[0] : item.imageUrl;
+                card.innerHTML = `
+                    <div class="absolute top-2 right-2 z-10">
+                        <button class="favorite-btn p-2 bg-white/70 rounded-full ${isFavorite ? 'saved' : ''}" data-id="${item.id}">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" /></svg>
+                        </button>
+                    </div>
+                    ${item.status === 'sold' ? `<div class="absolute inset-0 bg-black/50 flex items-center justify-center z-10"><span class="text-white text-xl font-bold border-2 p-2 rounded">SOLD</span></div>` : ''}
+                    <img src="${mainImage}" alt="${item.title}" class="w-full h-48 object-cover cursor-pointer item-card-img" data-id="${item.id}">
+                    <div class="p-4 cursor-pointer item-card-body" data-id="${item.id}">
+                        <h3 class="text-lg font-semibold truncate">${item.title}</h3>
+                        <p class="text-[var(--primary-blue)] font-bold mt-2 text-xl">${formatPrice(item.price)}</p>
+                    </div>
+                    ${isOwner ? `
+                    <button data-doc-id="${item.id}" class="edit-item-btn absolute bottom-2 right-10 bg-blue-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" /></svg>
+                    </button>
+                    <button data-doc-id="${item.id}" class="delete-item-btn absolute bottom-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                    </button>` : ''}
+                `;
+                DOMElements.itemsGrid.appendChild(card);
+            });
+        }
+        
+        function renderWantedGrid(items) {
+            DOMElements.wantedGrid.innerHTML = '';
+             if (items.length === 0) { DOMElements.noItems.classList.remove('hidden'); return; }
+            DOMElements.noItems.classList.add('hidden');
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-lg shadow-md overflow-hidden p-4 flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <span class="inline-block bg-amber-100 text-amber-800 text-xs font-semibold px-2 py-1 rounded-full mb-2">${item.category}</span>
+                        <h3 class="text-lg font-semibold">${item.title}</h3>
+                        <p class="text-gray-600 mt-1 text-sm">${item.description}</p>
+                    </div>
+                    <div class="mt-4 pt-2 border-t">
+                        <p class="text-sm">Posted by: <a href="#" class="font-medium text-[var(--primary-blue)] user-link" data-uid="${item.posterId}">${item.posterEmail || 'Anonymous'}</a></p>
+                    </div>
+                `;
+                 DOMElements.wantedGrid.appendChild(card);
+            });
+        }
+        
+        async function renderItemDetail(itemId) {
+            const item = state.allItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            const sellerDoc = await getDoc(doc(db, `users/${item.sellerId}`));
+            const sellerPhone = sellerDoc.exists() ? sellerDoc.data().phone : '';
+            const isOwner = state.currentUser?.uid === item.sellerId;
+
+            // --- NEW: Logic to build the image swiper and dots ---
+            const images = Array.isArray(item.imageUrls) && item.imageUrls.length > 0 ? item.imageUrls : [item.imageUrl];
+            const imageSwiperHtml = images.map(url => `
+                <img src="${url}" class="w-full h-64 object-cover flex-shrink-0 snap-center rounded-t-lg">
+            `).join('');
+
+            const dotsHtml = images.length > 1 ? images.map((_, index) => `
+                <button data-index="${index}" class="swiper-dot h-2 w-2 bg-gray-300 rounded-full"></button>
+            `).join('') : '';
+
+            // --- NEW: The entire modal HTML is rebuilt for the new layout ---
+            DOMElements.modals.itemDetail.innerHTML = `
+                <div id="itemDetailContent" class="bg-white rounded-lg shadow-xl w-full max-w-md m-4 modal relative max-h-[90vh] flex flex-col">
+                    <button id="closeItemDetailModal" class="absolute top-2 right-2 text-white bg-black/50 rounded-full p-1 z-20">&times;</button>
+                    
+                    <div class="relative">
+                        <div id="image-swiper" class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth">
+                            ${imageSwiperHtml}
+                        </div>
+                        <div id="swiper-dots" class="absolute bottom-2 left-0 right-0 flex justify-center space-x-2">
+                            ${dotsHtml}
+                        </div>
+                    </div>
+
+                    <div class="p-4 overflow-y-auto">
+                        <h2 class="text-2xl font-bold mb-2 break-words">${item.title}</h2>
+                        <p class="text-2xl font-bold text-[var(--primary-blue)] mb-4">${formatPrice(item.price)}</p>
+                        
+                        <div class="border-t pt-3 mt-3">
+                            <h3 class="font-semibold text-gray-800 mb-1">Description</h3>
+                            <p class="text-gray-600 break-words">${item.description}</p>
+                        </div>
+
+                        <div class="border-t pt-3 mt-3">
+                            <p class="text-sm text-gray-600">Seller: <a href="#" class="font-medium text-[var(--primary-blue)] user-link" data-uid="${item.sellerId}">${item.sellerEmail || 'Anonymous'}</a></p>
+                        </div>
+                        
+                        <div class="mt-4 grid grid-cols-2 gap-3">
+                            <a href="https://wa.me/255${sellerPhone.substring(1)}" target="_blank" class="w-full text-center bg-green-500 text-white py-2.5 rounded-lg flex items-center justify-center">
+                                WhatsApp
+                            </a>
+                            <a href="tel:+255${sellerPhone.substring(1)}" class="w-full text-center bg-gray-600 text-white py-2.5 rounded-lg flex items-center justify-center">
+                                Call Seller
+                            </a>
+                            ${!isOwner ? `<button id="messageSellerBtn" data-seller-id="${item.sellerId}" data-item-id="${item.id}" data-item-title="${item.title}" data-seller-email="${item.sellerEmail}" class="col-span-2 w-full bg-[var(--primary-blue)] text-white py-2.5 rounded-lg">
+                                Message Seller
+                            </button>` : ''}
+                            ${isOwner && item.status !== 'sold' ? `<button id="markAsSoldBtn" data-id="${item.id}" class="col-span-2 w-full bg-amber-500 text-white py-2.5 rounded-lg">Mark as Sold</button>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            toggleModal(DOMElements.modals.itemDetail, true);
+
+            // --- NEW: JavaScript to power the swiper dots ---
+            if (images.length > 1) {
+                const swiper = document.getElementById('image-swiper');
+                const dots = document.querySelectorAll('.swiper-dot');
+                
+                // Set the first dot as active initially
+                dots[0].classList.add('bg-blue-500');
+
+                swiper.addEventListener('scroll', () => {
+                    const itemWidth = swiper.offsetWidth;
+                    const activeIndex = Math.round(swiper.scrollLeft / itemWidth);
+                    
+                    dots.forEach((dot, index) => {
+                        if (index === activeIndex) {
+                            dot.classList.add('bg-blue-500');
+                            dot.classList.remove('bg-gray-300');
+                        } else {
+                            dot.classList.remove('bg-blue-500');
+                            dot.classList.add('bg-gray-300');
+                        }
+                    });
+                });
+            }
+        }
+        
+        async function renderUserView(userId) {
+            const userDoc = await getDoc(doc(db, `users/${userId}`));
+            if (!userDoc.exists()) return;
+            const userData = userDoc.data();
+            const userItems = state.allItems.filter(item => item.sellerId === userId);
+            
+            // Calculate average rating
+            const ratingsQuery = query(collection(db, 'ratings'), where('sellerId', '==', userId));
+            const ratingsSnapshot = await getDocs(ratingsQuery);
+            let avgRating = 0;
+            if (!ratingsSnapshot.empty) {
+                const total = ratingsSnapshot.docs.reduce((sum, doc) => sum + doc.data().rating, 0);
+                avgRating = total / ratingsSnapshot.size;
+            }
+
+            DOMElements.modals.userView.querySelector('#userViewContent').innerHTML = `
+                <div class="p-6">
+                    <h2 class="text-2xl font-bold">${userData.email}</h2>
+                    <div class="flex items-center my-2">
+                        <div class="flex">${[1,2,3,4,5].map(i => `<svg class="h-5 w-5 ${i <= avgRating ? 'text-amber-400' : 'text-gray-300'}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>`).join('')}</div>
+                        <span class="ml-2 text-sm text-gray-600">(${ratingsSnapshot.size} ratings)</span>
+                    </div>
+                    <p class="text-gray-700">${userData.phone ? `Phone: ${userData.phone}` : 'No phone number provided'}</p>
+                    <h3 class="text-xl font-bold mt-6 mb-4">Items for Sale</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        ${userItems.length > 0 ? userItems.map(item => `
+                            <div class="border rounded-lg overflow-hidden">
+                                <img src="${Array.isArray(item.imageUrls) && item.imageUrls.length > 0 ? item.imageUrls[0] : item.imageUrl}" class="h-32 w-full object-cover">
+                                <div class="p-2">
+                                    <p class="font-semibold truncate">${item.title}</p>
+                                    <p class="text-sm text-[var(--primary-blue)]">${formatPrice(item.price)}</p>
+                                </div>
+                            </div>
+                        `).join('') : '<p>No items for sale.</p>'}
+                    </div>
+                </div>
+            `;
+            toggleModal(DOMElements.modals.userView, true);
+        }
+
+        // --- Actions ---
+        async function submitItemForm(e) {
+            e.preventDefault();
+            const form = DOMElements.forms.item;
+            const mode = form.dataset.mode; // 'edit', 'wanted', or 'forSale'
+            
+            const submitBtn = form.querySelector('#submitItemForm');
+            const submitText = form.querySelector('#submitItemFormText');
+            const spinner = form.querySelector('#submitItemFormSpinner');
+            submitBtn.disabled = true;
+            submitText.classList.add('hidden');
+            spinner.classList.remove('hidden');
+
+            try {
+                if (mode === 'edit') {
+                    const docId = form.dataset.editId;
+                    const itemData = {
+                        title: form.querySelector('#itemTitle').value,
+                        description: form.querySelector('#itemDescription').value,
+                        price: Number(form.querySelector('#itemPrice').value),
+                        category: form.querySelector('#itemCategory').value,
+                        campus: form.querySelector('#itemCampus').value,
+                    };
+                    await updateDoc(doc(db, `artifacts/${appId}/public/data/items`, docId), itemData);
+                } else if (mode === 'wanted') {
+                    // Existing logic for wanted items...
+                    const wantedData = {
+                        title: form.querySelector('#itemTitle').value,
+                        description: form.querySelector('#itemDescription').value,
+                        category: form.querySelector('#itemCategory').value,
+                        posterId: state.currentUser.uid,
+                        posterEmail: state.currentUser.email,
+                        createdAt: serverTimestamp(),
+                    };
+                    await addDoc(collection(db, `artifacts/${appId}/public/data/wanted`), wantedData);
+                } else {
+                    // --- MULTI-IMAGE UPLOAD LOGIC ---
+                    const imageFiles = Array.from(form.querySelector('#itemImage').files);
+                    if (imageFiles.length === 0) throw new Error("Please select at least one image.");
+                    if (imageFiles.length > 4) throw new Error("You can upload up to 4 images.");
+
+                    // Upload all images to imgbb and collect URLs
+                    const imageUrls = [];
+                    for (const imageFile of imageFiles) {
+                        const formData = new FormData();
+                        formData.append('image', imageFile);
+                        const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+                        const imgbbData = await imgbbRes.json();
+                        if (!imgbbData.success) throw new Error("Image upload failed: " + (imgbbData.error?.message || 'Unknown error'));
+                        imageUrls.push(imgbbData.data.url);
+                    }
+
+                    const newItemData = {
+                        title: form.querySelector('#itemTitle').value,
+                        description: form.querySelector('#itemDescription').value,
+                        price: Number(form.querySelector('#itemPrice').value),
+                        category: form.querySelector('#itemCategory').value,
+                        campus: form.querySelector('#itemCampus').value,
+                        imageUrls: imageUrls, // Store array of URLs
+                        imageUrl: imageUrls[0], // For backward compatibility
+                        sellerId: state.currentUser.uid,
+                        sellerEmail: state.currentUser.email,
+                        status: 'available',
+                        createdAt: serverTimestamp(),
+                    };
+                    await addDoc(collection(db, `artifacts/${appId}/public/data/items`), newItemData);
+                }
+                toggleModal(DOMElements.modals.itemForm, false);
+            } catch (err) {
+                form.querySelector('#itemFormError').textContent = err.message;
+                form.querySelector('#itemFormError').classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitText.classList.remove('hidden');
+                spinner.classList.add('hidden');
+                form.dataset.mode = 'forSale'; // Reset form mode
+                form.removeAttribute('data-edit-id');
+            }
+        }
+        
+        const toggleFavorite = async (itemId) => {
+            // Use requireLogin to ensure user is not anonymous
+            requireLogin(async () => {
+                const userDocRef = doc(db, `users/${state.currentUser.uid}`);
+                const newFavorites = state.userData.favoriteItems?.includes(itemId)
+                    ? state.userData.favoriteItems.filter(id => id !== itemId)
+                    : [...(state.userData.favoriteItems || []), itemId];
+                await updateDoc(userDocRef, { favoriteItems: newFavorites });
+                state.userData.favoriteItems = newFavorites; // Update local state
+                showToast(newFavorites.includes(itemId) ? "Added to favorites!" : "Removed from favorites.");
+                filterAndRender();
+            }, "Please log in to save favorites.");
+        };
+
+        const markAsSold = async (itemId) => {
+            await updateDoc(doc(db, `artifacts/${appId}/public/data/items`, itemId), { status: 'sold' });
+            toggleModal(DOMElements.modals.itemDetail, false);
+        };
+        
+        const submitRating = async (sellerId, rating) => {
+             requireLogin(async () => {
+                const ratingDocRef = doc(db, 'ratings', `${state.currentUser.uid}_${sellerId}`);
+                await setDoc(ratingDocRef, { sellerId, raterId: state.currentUser.uid, rating });
+                showToast('Asante for rating!');
+             }, "Please log in to rate users.");
+        };
+        
+        // --- NEW --- Helper function to check for login
+        function requireLogin(action, toastMessage = "Please log in to use this feature.") {
+            if (state.currentUser && !state.currentUser.isAnonymous) {
+                action(); // Execute the action if the user is fully logged in
+            } else {
+                // Show the login modal if the user is anonymous or not logged in
+                showToast(toastMessage, "error");
+                toggleModal(DOMElements.modals.auth, true);
+            }
+        }
+
+        // --- Event Listeners Setup ---
+        function setupEventListeners() {
+            // Search
+            [DOMElements.searchInput, DOMElements.searchInputMobile].forEach(input => {
+                if (input) {
+                    input.addEventListener('input', e => {
+                        state.currentSearch = e.target.value;
+                        filterAndRender();
+                    });
+                }
+            });
+
+            // --- MODIFIED --- Mobile menu actions now use requireLogin
+            DOMElements.mobile.favoritesBtn.addEventListener('click', () => {
+                requireLogin(() => switchView('favorites'), "Please log in to see your favorites.");
+                DOMElements.mobile.menu.classList.add('hidden');
+            });
+            DOMElements.mobile.profileBtn.addEventListener('click', () => {
+                requireLogin(() => {
+                    DOMElements.forms.profile.querySelector('#profilePhone').value = state.userData.phone || '';
+                    toggleModal(DOMElements.modals.profile, true);
+                }, "Please log in to view your profile.");
+                DOMElements.mobile.menu.classList.add('hidden');
+            });
+            const sellAction = () => {
+                const form = DOMElements.forms.item;
+                form.reset();
+                form.dataset.mode = state.currentView === 'wanted' ? 'wanted' : 'forSale';
+                document.getElementById('itemFormTitle').textContent = state.currentView === 'wanted' ? 'Post a Wanted Ad' : 'List Your Item';
+                document.getElementById('itemPrice').parentElement.style.display = state.currentView === 'wanted' ? 'none' : 'block';
+                document.getElementById('itemImage').parentElement.style.display = state.currentView === 'wanted' ? 'none' : 'block';
+                toggleModal(DOMElements.modals.itemForm, true);
+            };
+            DOMElements.mobile.sellBtn.addEventListener('click', () => {
+                requireLogin(sellAction, "Please log in to sell an item.");
+                DOMElements.mobile.menu.classList.add('hidden');
+            });
+
+            DOMElements.modals.itemDetail.addEventListener('click', e => {
+            // NEW: Handles the close button click
+            if (e.target.closest('#closeItemDetailModal')) {
+                toggleModal(DOMElements.modals.itemDetail, false);
+            }
+            
+            if (e.target.closest('#markAsSoldBtn')) {
+                markAsSold(e.target.closest('#markAsSoldBtn').dataset.id);
+            }
+            
+            if (e.target.closest('.star-rating svg')) {
+                const rating = e.target.closest('svg').dataset.value;
+                const sellerId = e.target.closest('.star-rating').dataset.sellerId;
+                submitRating(sellerId, Number(rating));
+            }
+            
+            if (e.target.closest('#messageSellerBtn')) {
+                const btn = e.target.closest('#messageSellerBtn');
+                toggleModal(DOMElements.modals.itemDetail, false);
+                openChat(btn.dataset.sellerId, btn.dataset.itemId, btn.dataset.itemTitle, btn.dataset.sellerEmail);
+            }
+        });
+
+            DOMElements.chatsBtn.addEventListener('click', () => requireLogin(openInbox, "Please log in to see your chats."));
+            DOMElements.mobile.chatsBtn.addEventListener('click', () => {
+                requireLogin(openInbox, "Please log in to see your chats.");
+                DOMElements.mobile.menu.classList.add('hidden');
+            });
+
+            DOMElements.mobile.forSaleBtn.addEventListener('click', () => {
+                switchView('forSale');
+                DOMElements.mobile.menu.classList.add('hidden');
+            });
+            DOMElements.mobile.wantedBtn.addEventListener('click', () => {
+                switchView('wanted');
+                DOMElements.mobile.menu.classList.add('hidden');
+            });
+
+            // --- PASTE THIS ENTIRE NEW BLOCK IN ---
+            document.getElementById('openFiltersBtn').addEventListener('click', () => {
+                // Pre-select the radio buttons to match the current state
+                document.querySelector(`input[name="categoryFilter"][value="${state.currentCategory}"]`).checked = true;
+                document.querySelector(`input[name="campusFilter"][value="${state.currentCampus}"]`).checked = true;
+                document.getElementById('showSoldToggleModal').checked = state.showSold;
+                toggleModal(DOMElements.modals.filters, true);
+            });
+
+            document.getElementById('googleSignInBtn').addEventListener('click', async () => {
+                const googleProvider = new GoogleAuthProvider();
+                try {
+                    await signInWithPopup(auth, googleProvider);
+                    // After a successful popup login, onAuthStateChanged will handle the rest.
+                    toggleModal(DOMElements.modals.auth, false); // Close the modal
+                    showToast("Logged in with Google successfully!", "success");
+                } catch (error) {
+                    console.error("Google Sign-In Error:", error);
+                    DOMElements.modals.auth.querySelector('#authError').textContent = error.message;
+                    DOMElements.modals.auth.querySelector('#authError').classList.remove('hidden');
+                }
+            });
+
+            document.getElementById('closeFiltersModal').addEventListener('click', () => {
+                toggleModal(DOMElements.modals.filters, false);
+            });
+
+            document.getElementById('applyFiltersBtn').addEventListener('click', () => {
+                // Get the selected values from the modal
+                const selectedCategory = document.querySelector('input[name="categoryFilter"]:checked').value;
+                const selectedCampus = document.querySelector('input[name="campusFilter"]:checked').value;
+                const showSold = document.getElementById('showSoldToggleModal').checked;
+
+                // Update state
+                state.currentCategory = selectedCategory;
+                state.currentCampus = selectedCampus;
+                state.showSold = showSold;
+
+                filterAndRender(); // Re-draw the item grid with new filters
+                toggleModal(DOMElements.modals.filters, false); // Close the modal
+            });
+            // --- END OF NEW LOGIC --- 
+
+
+            // Make modal backdrops clickable to close them
+            Object.values(DOMElements.modals).forEach(modal => {
+                modal.addEventListener('click', e => {
+                    if (e.target === modal) {
+                        // If we are closing the chat modal, make sure to unsubscribe from updates.
+                        if (modal === DOMElements.modals.chat && state.unsubscribe.chat) {
+                            state.unsubscribe.chat();
+                            state.unsubscribe.chat = null;
+                        }
+                        toggleModal(modal, false);
+                    }
+                });
+            });
+
+            document.getElementById('chatForm').addEventListener('submit', e => {
+                e.preventDefault();
+                sendMessage();
+            });
+            document.getElementById('postAdHeroBtn').addEventListener('click', () => {
+                requireLogin(sellAction, "Please log in to post an ad.");
+            });
+            
+            document.getElementById('forgotPasswordLink').addEventListener('click', e => {
+                e.preventDefault();
+                const email = prompt("Please enter your email to receive a password reset link:");
+                if (email) {
+                    sendPasswordResetEmail(auth, email)
+                        .then(() => {
+                            showToast("Password reset email sent! Check your inbox.");
+                        })
+                        .catch(error => {
+                            showToast(`Error: ${error.message}`);
+                        });
+                }
+            });
+
+            // View Toggles
+            DOMElements.viewToggles.forSale.addEventListener('click', () => switchView('forSale'));
+            DOMElements.viewToggles.wanted.addEventListener('click', () => switchView('wanted'));
+
+            // --- MODIFIED --- Header buttons now use requireLogin
+            DOMElements.homeBtn.addEventListener('click', () => switchView('forSale'));
+
+            DOMElements.favoritesBtn.addEventListener('click', () => {
+                requireLogin(() => switchView('favorites'), "Please log in to view your favorites.");
+            });
+            DOMElements.profileBtn.addEventListener('click', () => {
+                requireLogin(() => {
+                    DOMElements.forms.profile.querySelector('#profilePhone').value = state.userData.phone || '';
+                    toggleModal(DOMElements.modals.profile, true);
+                }, "Please log in to edit your profile.");
+            });
+            DOMElements.sellBtn.addEventListener('click', () => {
+                requireLogin(sellAction, "Please log in to sell an item.");
+            });
+
+
+            // Grid clicks (delegated)
+            DOMElements.itemsGrid.addEventListener('click', e => {
+                const card = e.target.closest('[data-id]'); // Find the parent card
+                if (!card) return; // If no card was clicked, do nothing
+
+                const id = card.dataset.id; // Get the ID from the card
+
+                if (e.target.closest('.favorite-btn')) {
+                    toggleFavorite(id);
+                } else if (e.target.closest('.edit-item-btn')) {
+                    const docId = e.target.closest('.edit-item-btn').dataset.docId;
+                    const itemToEdit = state.allItems.find(item => item.id === docId);
+                    if (itemToEdit) {
+                        const form = DOMElements.forms.item;
+                        form.reset();
+                        form.dataset.mode = 'edit';
+                        form.dataset.editId = docId;
+                        document.getElementById('itemFormTitle').textContent = 'Edit Your Item';
+                        document.getElementById('itemTitle').value = itemToEdit.title;
+                        document.getElementById('itemDescription').value = itemToEdit.description;
+                        document.getElementById('itemPrice').value = itemToEdit.price;
+                        document.getElementById('itemCategory').value = itemToEdit.category;
+                        document.getElementById('itemCampus').value = itemToEdit.campus;
+                        document.getElementById('itemImage').parentElement.style.display = 'none';
+                        document.getElementById('itemPrice').parentElement.style.display = 'block';
+                        toggleModal(DOMElements.modals.itemForm, true);
+                    }
+                } else if (e.target.closest('.delete-item-btn')) {
+                    if (confirm('Delete this item?')) {
+                        deleteDoc(doc(db, `artifacts/${appId}/public/data/items`, e.target.closest('.delete-item-btn').dataset.docId));
+                    }
+                } else {
+                    renderItemDetail(id);
+                }
+            });
+            
+            // Detail Modal clicks (delegated)
+            DOMElements.modals.itemDetail.addEventListener('click', e => {
+                if (e.target.closest('#markAsSoldBtn')) markAsSold(e.target.closest('#markAsSoldBtn').dataset.id);
+                if (e.target.closest('.star-rating svg')) {
+                    const rating = e.target.closest('svg').dataset.value;
+                    const sellerId = e.target.closest('.star-rating').dataset.sellerId;
+                    submitRating(sellerId, Number(rating));
+                }
+               if (e.target.closest('#messageSellerBtn')) {
+                const btn = e.target.closest('#messageSellerBtn');
+                
+                // First, close the item detail modal
+                toggleModal(DOMElements.modals.itemDetail, false);
+
+                // Then, open the chat with all the necessary info
+                openChat(btn.dataset.sellerId, btn.dataset.itemId, btn.dataset.itemTitle, btn.dataset.sellerEmail);
+            }
+            });
+            
+            // User Link clicks (delegated)
+            document.body.addEventListener('click', e => {
+                if (e.target.matches('.user-link')) {
+                    e.preventDefault();
+                    renderUserView(e.target.dataset.uid);
+                }
+            });
+
+            // Forms
+            DOMElements.forms.auth.addEventListener('submit', async e => {
+                e.preventDefault();
+                const { email, password } = e.target.elements;
+                try {
+                    const authFunction = state.isLoginMode
+                        ? signInWithEmailAndPassword(auth, email.value, password.value)
+                        : createUserWithEmailAndPassword(auth, email.value, password.value);
+                    
+                    await authFunction;
+                    
+                    // After successful login/signup, close the auth modal
+                    toggleModal(DOMElements.modals.auth, false);
+                    showToast(state.isLoginMode ? "Logged in successfully!" : "Account created successfully!");
+                } catch (err) {
+                    DOMElements.modals.auth.querySelector('#authError').textContent = err.message;
+                    DOMElements.modals.auth.querySelector('#authError').classList.remove('hidden');
+                }
+            });
+            DOMElements.forms.profile.addEventListener('submit', async e => {
+                e.preventDefault();
+                await updateDoc(doc(db, `users/${state.currentUser.uid}`), { phone: e.target.elements.profilePhone.value });
+                state.userData.phone = e.target.elements.profilePhone.value;
+                toggleModal(DOMElements.modals.profile, false);
+            });
+            DOMElements.forms.item.addEventListener('submit', submitItemForm);
+
+            // Close Modals
+            document.querySelectorAll('[id^=close], [id^=cancel]').forEach(btn => btn.addEventListener('click', () => toggleModal(btn.closest('.modal-backdrop'), false)));
+        }
+        
+        function switchView(view) {
+            state.currentView = view;
+            const forSaleActive = view === 'forSale';
+            const wantedActive = view === 'wanted';
+            const favActive = view === 'favorites';
+            
+            DOMElements.viewToggles.forSale.classList.toggle('bg-white', forSaleActive);
+            DOMElements.viewToggles.forSale.classList.toggle('text-[var(--primary-blue)]', forSaleActive);
+            DOMElements.viewToggles.wanted.classList.toggle('bg-white', wantedActive);
+            DOMElements.viewToggles.wanted.classList.toggle('text-[var(--primary-blue)]', wantedActive);
+
+            // --- ADD THIS NEW LOGIC ---
+            // Change the text of the Sell/Post Ad button based on the view
+            if (wantedActive) {
+                DOMElements.sellBtn.textContent = 'Post Ad';
+                // We need to keep the SVG icon for the mobile button
+                DOMElements.mobile.sellBtn.innerHTML = `<svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> Post Ad`;
+            } else {
+                DOMElements.sellBtn.textContent = 'Sell';
+                DOMElements.mobile.sellBtn.innerHTML = `<svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> Sell`;
+            }
+            // --- END OF NEW LOGIC ---
+
+            DOMElements.itemsGrid.classList.toggle('hidden', wantedActive);
+            DOMElements.wantedGrid.classList.toggle('hidden', !wantedActive);
+            
+            // This line was causing an error because categoryFilters doesn't exist anymore.
+            // Let's remove it.
+            // DOMElements.categoryFilters.parentElement.style.display = favActive ? 'none' : 'block';
+            
+            DOMElements.pageTitle.textContent = favActive ? 'My Favorites' : (wantedActive ? 'Wanted Items' : 'For Sale');
+            filterAndRender();
+        }
+
+        // --- Initial Load ---
+        function initializeUI() {
+            // --- This part generates the radio buttons inside the new modal ---
+            const categoryRadios = CATEGORIES.map(c => `
+                <label class="flex items-center">
+                    <input type="radio" name="categoryFilter" value="${c}" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                    <span class="ml-3 text-gray-700">${c}</span>
+                </label>
+            `).join('');
+            document.getElementById('category-radio-filters').innerHTML = categoryRadios;
+
+            const campusRadios = CAMPUSES.map(c => `
+                <label class="flex items-center">
+                    <input type="radio" name="campusFilter" value="${c}" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                    <span class="ml-3 text-gray-700">${c}</span>
+                </label>
+            `).join('');
+            document.getElementById('campus-radio-filters').innerHTML = campusRadios;
+            // --- End of new part ---
+
+            document.getElementById('itemCategory').innerHTML = CATEGORIES.filter(c => c !== 'All').map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('itemCampus').innerHTML = CAMPUSES.filter(c => c !== 'All').map(c => `<option value="${c}">${c}</option>`).join('');
+
+            // This old listener is no longer needed, DELETE IT:
+            // DOMElements.categoryFilters.addEventListener('click', ...);
+
+            setupEventListeners();
+        }
+
+        initializeUI();
+
+        // Toggle Login/Sign Up mode
+        document.getElementById('authToggleLink').addEventListener('click', e => {
+            e.preventDefault();
+            state.isLoginMode = !state.isLoginMode;
+            document.getElementById('authModalTitle').textContent = state.isLoginMode ? 'Login' : 'Sign Up';
+            document.getElementById('authSubmitBtn').textContent = state.isLoginMode ? 'Login' : 'Sign Up';
+            document.getElementById('authToggleLink').textContent = state.isLoginMode
+                ? 'Need an account? Sign Up'
+                : 'Already have an account? Login';
+            document.getElementById('authError').classList.add('hidden');
+        });
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        });
+    </script>
+
+    <footer class="bg-gray-800 text-gray-300 mt-12 py-6 text-center text-sm">
+        <div class="container mx-auto flex flex-col items-center space-y-2 sm:space-y-0 sm:flex-row sm:justify-center sm:space-x-4">
+            <span>© 2025 YoSoko.</span>
+            <a href="/privacy.html" class="text-blue-400 hover:underline">Privacy Policy</a>
+            <span>Created by <span class="font-semibold">heisabsa</span></span>
+            <span>
+                Contact: 
+                <a href="mailto:salamaandrew65@email.com" class="text-blue-400 hover:underline">salamaandrew65@email.com</a> | 
+                <a href="tel:+255621578608" class="text-blue-400 hover:underline">+255 621 578 608</a>
+            </span>
+            <span>
+                Instagram: 
+                <a href="https://instagram.com/heisabsa" target="_blank" class="text-blue-400 hover:underline">@heisabsa</a>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>
