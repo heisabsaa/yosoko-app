@@ -915,15 +915,34 @@
                     if (imageFiles.length === 0) throw new Error("Please select at least one image.");
                     if (imageFiles.length > 4) throw new Error("You can upload up to 4 images.");
 
-                    // Upload all images to imgbb and collect URLs
                     const imageUrls = [];
+                    // This is the path to our new Netlify function
+                    const functionUrl = '/.netlify/functions/uploadImage'; 
+
                     for (const imageFile of imageFiles) {
-                        const formData = new FormData();
-                        formData.append('image', imageFile);
-                        const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
-                        const imgbbData = await imgbbRes.json();
-                        if (!imgbbData.success) throw new Error("Image upload failed: " + (imgbbData.error?.message || 'Unknown error'));
-                        imageUrls.push(imgbbData.data.url);
+                        // This helper function converts the image file into a text string
+                        const toBase64 = file => new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.readAsDataURL(file);
+                            reader.onload = () => resolve(reader.result);
+                            reader.onerror = error => reject(error);
+                        });
+
+                        // Convert the image
+                        const base64Image = await toBase64(imageFile);
+
+                        // Send the text string to our secure function
+                        const response = await fetch(functionUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ image: base64Image }),
+                        });
+
+                        const result = await response.json();
+                        if (!response.ok) {
+                            throw new Error(result.error || "Image upload failed.");
+                        }
+                        imageUrls.push(result.imageUrl);
                     }
 
                     const newItemData = {
