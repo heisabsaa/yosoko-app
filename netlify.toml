@@ -1,2 +1,9 @@
+[build]
+  # This command runs from the root of your project
+  command = "npm run build"
+  # This tells Netlify where to find the finished function files
+  functions = "netlify/functions/built"
+
 [functions]
-  directory = "netlify/functions"
+  # This tells netlify-lambda where the source code is
+  directory = "netlify/functions/src"
