@@ -1,2 +1,3 @@
-[functions]
-  directory = "netlify/functions/"
+[build]
+  command = "cd netlify/functions && npm install && npm run build"
+  functions = "netlify/functions/built"
