@@ -12,8 +12,5 @@
   "description": "",
   "dependencies": {
     "node-fetch": "^3.3.2"
-  },
-  "devDependencies": {
-    "netlify-lambda": "^2.0.16"
   }
 }
