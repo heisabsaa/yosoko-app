@@ -915,13 +915,11 @@
                     if (imageFiles.length > 4) throw new Error("You can upload up to 4 images.");
 
 
-                    // NEW, SECURE CODE FOR NETLIFY
+                    // NEW, MORE ROBUST CODE
                     const imageUrls = [];
-                    // This is the path to our new Netlify function
                     const functionUrl = '/.netlify/functions/uploadImage'; 
 
                     for (const imageFile of imageFiles) {
-                        // This helper function converts the image file into a text string
                         const toBase64 = file => new Promise((resolve, reject) => {
                             const reader = new FileReader();
                             reader.readAsDataURL(file);
@@ -929,20 +927,23 @@
                             reader.onerror = error => reject(error);
                         });
 
-                        // Convert the image
                         const base64Image = await toBase64(imageFile);
 
-                        // Send the text string to our secure function
                         const response = await fetch(functionUrl, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ image: base64Image }),
                         });
 
+                        // Get the response body as JSON
                         const result = await response.json();
+
+                        // IMPORTANT: Check if the response was successful *after* getting the JSON
                         if (!response.ok) {
-                            throw new Error(result.error || "Image upload failed.");
+                            // Use the new error message from our function's JSON response
+                            throw new Error(result.error || "An unknown error occurred during image upload.");
                         }
+
                         imageUrls.push(result.imageUrl);
                     }
 
