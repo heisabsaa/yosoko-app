@@ -8,6 +8,14 @@
     <link rel="apple-touch-icon" href="images/favicon-96x96.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-T16BXNB1T6"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-T16BXNB1T6');
+    </script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .modal-backdrop { background-color: rgba(0, 0, 0, 0.6); }
@@ -119,7 +127,7 @@
             </h1>
             <p class="mt-4 text-base sm:text-xl font-light">
             <br>Find amazing deals from fellow students or make extra cash by selling your stuff.</br>
-            <br>Peer‑to‑peer campus trading made simple.
+            Peer‑to‑peer campus trading made simple.
             Buy, sell, and trade items easily on campus!
             </p>
             <div class="mt-8">
@@ -1024,6 +1032,18 @@
                     });
                 }
             });
+
+            let lastPath = location.pathname;
+            setInterval(() => {
+                if (location.pathname !== lastPath) {
+                    lastPath = location.pathname;
+                    gtag('event', 'page_view', {
+                        page_path: location.pathname,
+                        page_location: location.href,
+                        page_title: document.title
+                    });
+                }
+            }, 500);
 
             // --- MODIFIED --- Mobile menu actions now use requireLogin
             DOMElements.mobile.favoritesBtn.addEventListener('click', () => {
