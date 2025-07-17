@@ -564,6 +564,20 @@
         const toggleModal = (modal, show) => modal.classList.toggle('hidden-modal', !show);
         const formatPrice = (price) => `TSh ${Number(price).toLocaleString('en-US')}`;
 
+        const updateMetaTags = (title, description) => {
+            document.title = title;
+            // First, try to find an existing meta description tag
+            let metaDesc = document.querySelector('meta[name="description"]');
+            // If it doesn't exist, create one and append it to the head
+            if (!metaDesc) {
+                metaDesc = document.createElement('meta');
+                metaDesc.name = "description";
+                document.head.appendChild(metaDesc);
+            }
+            // Set the content of the meta description
+            metaDesc.setAttribute("content", description);
+        };
+
         // --- Auth ---
         // Replace your entire onAuthStateChanged function with this one
         onAuthStateChanged(auth, async user => {
@@ -756,6 +770,10 @@
         async function renderItemDetail(itemId) {
             const item = state.allItems.find(i => i.id === itemId);
             if (!item) return;
+
+            const newTitle = `${item.title} - ${item.campus} | YoSoko`;
+            const newDescription = `For Sale on YoSoko: ${item.description.substring(0, 150)}... Price: ${formatPrice(item.price)}. Posted by a student at ${item.campus}.`;
+            updateMetaTags(newTitle, newDescription);
 
             const sellerDoc = await getDoc(doc(db, `users/${item.sellerId}`));
             const sellerPhone = sellerDoc.exists() ? sellerDoc.data().phone : '';

@@ -1,15 +1,8 @@
 [functions]
   directory = "netlify/functions"
 
-[plugins]
-  [[plugins.inputs]]
-  # Array of user-agent names to prerender
-  # (we recommend leaving this as is)
-  userAgents = [
-    "googlebot",
-    "yahoo-slurp",
-    "bingbot",
-    "duckduckbot",
-    "baiduspider",
-    "yandex",
-  ]
+
+[[headers]]
+  for = "/sitemap.xml"
+  [headers.values]
+    Content-Type = "application/xml"
