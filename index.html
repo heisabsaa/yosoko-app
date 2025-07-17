@@ -729,7 +729,9 @@
                         </button>
                     </div>
                     ${item.status === 'sold' ? `<div class="absolute inset-0 bg-black/50 flex items-center justify-center z-10"><span class="text-white text-xl font-bold border-2 p-2 rounded">SOLD</span></div>` : ''}
-                    <img src="${mainImage}" alt="${item.title}" class="w-full h-48 object-contain cursor-pointer item-card-img" data-id="${item.id}">
+                    <div class="h-48 w-full bg-slate-100 flex items-center justify-center">
+                        <img src="${mainImage}" alt="${item.title}" class="h-full w-full object-contain cursor-pointer item-card-img" data-id="${item.id}">
+                    </div>
                     <div class="p-4 cursor-pointer item-card-body" data-id="${item.id}">
                         <h3 class="text-lg font-semibold truncate">${item.title}</h3>
                         <p class="text-[var(--primary-blue)] font-bold mt-2 text-xl">${formatPrice(item.price)}</p>
@@ -754,14 +756,26 @@
                 const card = document.createElement('div');
                 card.className = "bg-white rounded-lg shadow-md overflow-hidden p-4 flex flex-col justify-between";
                 card.innerHTML = `
-                    <div>
-                        <span class="inline-block bg-amber-100 text-amber-800 text-xs font-semibold px-2 py-1 rounded-full mb-2">${item.category}</span>
-                        <h3 class="text-lg font-semibold">${item.title}</h3>
-                        <p class="text-gray-600 mt-1 text-sm">${item.description}</p>
+                    <div class="absolute top-2 right-2 z-10">
+                        <button class="favorite-btn p-2 bg-white/70 rounded-full ${isFavorite ? 'saved' : ''}" data-id="${item.id}">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" /></svg>
+                        </button>
                     </div>
-                    <div class="mt-4 pt-2 border-t">
-                        <p class="text-sm">Posted by: <a href="#" class="font-medium text-[var(--primary-blue)] user-link" data-uid="${item.posterId}">${item.posterEmail || 'Anonymous'}</a></p>
+                    ${item.status === 'sold' ? `<div class="absolute inset-0 bg-black/50 flex items-center justify-center z-10"><span class="text-white text-xl font-bold border-2 p-2 rounded">SOLD</span></div>` : ''}
+                    <div class="h-48 w-full bg-gray-200 flex items-center justify-center">
+                        <img src="${mainImage}" alt="${item.title}" class="h-full w-full object-contain cursor-pointer item-card-img" data-id="${item.id}">
                     </div>
+                    <div class="p-4 cursor-pointer item-card-body" data-id="${item.id}">
+                        <h3 class="text-lg font-semibold truncate">${item.title}</h3>
+                        <p class="text-[var(--primary-blue)] font-bold mt-2 text-xl">${formatPrice(item.price)}</p>
+                    </div>
+                    ${isOwner ? `
+                    <button data-doc-id="${item.id}" class="edit-item-btn absolute bottom-2 right-10 bg-blue-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" /></svg>
+                    </button>
+                    <button data-doc-id="${item.id}" class="delete-item-btn absolute bottom-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                    </button>` : ''}
                 `;
                  DOMElements.wantedGrid.appendChild(card);
             });
@@ -771,57 +785,66 @@
             const item = state.allItems.find(i => i.id === itemId);
             if (!item) return;
 
+            // --- Meta Tag Update ---
             const newTitle = `${item.title} - ${item.campus} | YoSoko`;
             const newDescription = `For Sale on YoSoko: ${item.description.substring(0, 150)}... Price: ${formatPrice(item.price)}. Posted by a student at ${item.campus}.`;
             updateMetaTags(newTitle, newDescription);
+
+            //
+            // --- CORRECTED STRUCTURED DATA IMPLEMENTATION ---
+            //
+            // First, remove any old structured data script to prevent duplicates
+            const oldStructuredData = document.getElementById('structured-data-product');
+            if (oldStructuredData) {
+                oldStructuredData.remove();
+            }
+
+            // Create the new script tag
+            const structuredDataScript = document.createElement('script');
+            structuredDataScript.type = 'application/ld+json';
+            structuredDataScript.id = 'structured-data-product'; // Assign the ID
+
+            const structuredData = {
+              "@context": "https://schema.org/",
+              "@type": "Product",
+              "name": item.title,
+              "image": Array.isArray(item.imageUrls) && item.imageUrls.length > 0 ? item.imageUrls[0] : item.imageUrl,
+              "description": item.description,
+              "sku": item.id,
+              "brand": { "@type": "Brand", "name": "YoSoko" },
+              "offers": {
+                "@type": "Offer",
+                "url": window.location.href,
+                "priceCurrency": "TZS",
+                "price": item.price,
+                "availability": item.status === 'sold' ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
+                "seller": { "@type": "Person", "name": item.sellerEmail }
+              }
+            };
+            // Inject the data and append the new script to the document's head
+            structuredDataScript.textContent = JSON.stringify(structuredData);
+            document.head.appendChild(structuredDataScript);
+            // --- END OF CORRECTION ---
 
             const sellerDoc = await getDoc(doc(db, `users/${item.sellerId}`));
             const sellerPhone = sellerDoc.exists() ? sellerDoc.data().phone : '';
             const isOwner = state.currentUser?.uid === item.sellerId;
 
-            // --- ADD THIS ENTIRE NEW BLOCK FOR STRUCTURED DATA ---
-            //
-            const structuredData = {
-              "@context": "https://schema.org/",
-              "@type": "Product",
-              "name": item.title,
-              "image": Array.isArray(item.imageUrls) && item.imageUrls.length > 0 ? item.imageUrls[0] : item.imageUrl, // Use the first image
-              "description": item.description,
-              "sku": item.id, // Use the item's unique ID as the SKU
-              "brand": {
-                "@type": "Brand",
-                "name": "YoSoko"
-              },
-              "offers": {
-                "@type": "Offer",
-                "url": window.location.href, // The current page URL
-                "priceCurrency": "TZS", // Tanzanian Shilling
-                "price": item.price,
-                "availability": item.status === 'sold' ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
-                "seller": {
-                  "@type": "Person",
-                  "name": item.sellerEmail // The seller's email or name
-                }
-              }
-            };
-            // Find the script tag and inject the data as a JSON string
-            document.getElementById('structured-data-product').textContent = JSON.stringify(structuredData);
-
-            // --- NEW: Logic to build the image swiper and dots ---
             const images = Array.isArray(item.imageUrls) && item.imageUrls.length > 0 ? item.imageUrls : [item.imageUrl];
+            // --- Layout Improvement: Using a softer background color (bg-slate-100) ---
             const imageSwiperHtml = images.map(url => `
-                <img src="${url}" class="w-full h-64 object-cover flex-shrink-0 snap-center rounded-t-lg">
+                <div class="w-full h-64 bg-slate-100 flex-shrink-0 snap-center rounded-t-lg">
+                    <img src="${url}" class="w-full h-full object-contain">
+                </div>
             `).join('');
 
             const dotsHtml = images.length > 1 ? images.map((_, index) => `
                 <button data-index="${index}" class="swiper-dot h-2 w-2 bg-gray-300 rounded-full"></button>
             `).join('') : '';
 
-            // --- NEW: The entire modal HTML is rebuilt for the new layout ---
             DOMElements.modals.itemDetail.innerHTML = `
                 <div id="itemDetailContent" class="bg-white rounded-lg shadow-xl w-full max-w-md m-4 modal relative max-h-[90vh] flex flex-col">
                     <button id="closeItemDetailModal" class="absolute top-2 right-2 text-white bg-black/50 rounded-full p-1 z-20">&times;</button>
-                    
                     <div class="relative">
                         <div id="image-swiper" class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth">
                             ${imageSwiperHtml}
@@ -830,30 +853,20 @@
                             ${dotsHtml}
                         </div>
                     </div>
-
                     <div class="p-4 overflow-y-auto">
                         <h2 class="text-2xl font-bold mb-2 break-words">${item.title}</h2>
                         <p class="text-2xl font-bold text-[var(--primary-blue)] mb-4">${formatPrice(item.price)}</p>
-                        
                         <div class="border-t pt-3 mt-3">
                             <h3 class="font-semibold text-gray-800 mb-1">Description</h3>
                             <p class="text-gray-600 break-words">${item.description}</p>
                         </div>
-
                         <div class="border-t pt-3 mt-3">
                             <p class="text-sm text-gray-600">Seller: <a href="#" class="font-medium text-[var(--primary-blue)] user-link" data-uid="${item.sellerId}">${item.sellerEmail || 'Anonymous'}</a></p>
                         </div>
-                        
                         <div class="mt-4 grid grid-cols-2 gap-3">
-                            <a href="https://wa.me/255${sellerPhone.substring(1)}" target="_blank" class="w-full text-center bg-green-500 text-white py-2.5 rounded-lg flex items-center justify-center">
-                                WhatsApp
-                            </a>
-                            <a href="tel:+255${sellerPhone.substring(1)}" class="w-full text-center bg-gray-600 text-white py-2.5 rounded-lg flex items-center justify-center">
-                                Call Seller
-                            </a>
-                            ${!isOwner ? `<button id="messageSellerBtn" data-seller-id="${item.sellerId}" data-item-id="${item.id}" data-item-title="${item.title}" data-seller-email="${item.sellerEmail}" class="col-span-2 w-full bg-[var(--primary-blue)] text-white py-2.5 rounded-lg">
-                                Message Seller
-                            </button>` : ''}
+                            <a href="https://wa.me/255${sellerPhone.substring(1)}" target="_blank" class="w-full text-center bg-green-500 text-white py-2.5 rounded-lg flex items-center justify-center">WhatsApp</a>
+                            <a href="tel:+255${sellerPhone.substring(1)}" class="w-full text-center bg-gray-600 text-white py-2.5 rounded-lg flex items-center justify-center">Call Seller</a>
+                            ${!isOwner ? `<button id="messageSellerBtn" data-seller-id="${item.sellerId}" data-item-id="${item.id}" data-item-title="${item.title}" data-seller-email="${item.sellerEmail}" class="col-span-2 w-full bg-[var(--primary-blue)] text-white py-2.5 rounded-lg">Message Seller</button>` : ''}
                             ${isOwner && item.status !== 'sold' ? `<button id="markAsSoldBtn" data-id="${item.id}" class="col-span-2 w-full bg-amber-500 text-white py-2.5 rounded-lg">Mark as Sold</button>` : ''}
                         </div>
                     </div>
@@ -862,26 +875,16 @@
 
             toggleModal(DOMElements.modals.itemDetail, true);
 
-            // --- NEW: JavaScript to power the swiper dots ---
             if (images.length > 1) {
                 const swiper = document.getElementById('image-swiper');
                 const dots = document.querySelectorAll('.swiper-dot');
-                
-                // Set the first dot as active initially
                 dots[0].classList.add('bg-blue-500');
-
                 swiper.addEventListener('scroll', () => {
                     const itemWidth = swiper.offsetWidth;
                     const activeIndex = Math.round(swiper.scrollLeft / itemWidth);
-                    
                     dots.forEach((dot, index) => {
-                        if (index === activeIndex) {
-                            dot.classList.add('bg-blue-500');
-                            dot.classList.remove('bg-gray-300');
-                        } else {
-                            dot.classList.remove('bg-blue-500');
-                            dot.classList.add('bg-gray-300');
-                        }
+                        dot.classList.toggle('bg-blue-500', index === activeIndex);
+                        dot.classList.toggle('bg-gray-300', index !== activeIndex);
                     });
                 });
             }
@@ -914,7 +917,9 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         ${userItems.length > 0 ? userItems.map(item => `
                             <div class="border rounded-lg overflow-hidden">
-                                <img src="${Array.isArray(item.imageUrls) && item.imageUrls.length > 0 ? item.imageUrls[0] : item.imageUrl}" class="h-32 w-full object-cover">
+                                <div class="h-32 w-full bg-gray-200">
+                                    <img src="${Array.isArray(item.imageUrls) && item.imageUrls.length > 0 ? item.imageUrls[0] : item.imageUrl}" class="h-full w-full object-contain">
+                                </div>
                                 <div class="p-2">
                                     <p class="font-semibold truncate">${item.title}</p>
                                     <p class="text-sm text-[var(--primary-blue)]">${formatPrice(item.price)}</p>
