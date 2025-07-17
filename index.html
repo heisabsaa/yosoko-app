@@ -10,11 +10,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-T16BXNB1T6"></script>
     <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
 
-    gtag('config', 'G-T16BXNB1T6');
+        gtag('config', 'G-T16BXNB1T6');
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -729,7 +729,7 @@
                         </button>
                     </div>
                     ${item.status === 'sold' ? `<div class="absolute inset-0 bg-black/50 flex items-center justify-center z-10"><span class="text-white text-xl font-bold border-2 p-2 rounded">SOLD</span></div>` : ''}
-                    <img src="${mainImage}" alt="${item.title}" class="w-full h-48 object-cover cursor-pointer item-card-img" data-id="${item.id}">
+                    <img src="${mainImage}" alt="${item.title}" class="w-full h-48 object-contain cursor-pointer item-card-img" data-id="${item.id}">
                     <div class="p-4 cursor-pointer item-card-body" data-id="${item.id}">
                         <h3 class="text-lg font-semibold truncate">${item.title}</h3>
                         <p class="text-[var(--primary-blue)] font-bold mt-2 text-xl">${formatPrice(item.price)}</p>
@@ -778,6 +778,34 @@
             const sellerDoc = await getDoc(doc(db, `users/${item.sellerId}`));
             const sellerPhone = sellerDoc.exists() ? sellerDoc.data().phone : '';
             const isOwner = state.currentUser?.uid === item.sellerId;
+
+            // --- ADD THIS ENTIRE NEW BLOCK FOR STRUCTURED DATA ---
+            //
+            const structuredData = {
+              "@context": "https://schema.org/",
+              "@type": "Product",
+              "name": item.title,
+              "image": Array.isArray(item.imageUrls) && item.imageUrls.length > 0 ? item.imageUrls[0] : item.imageUrl, // Use the first image
+              "description": item.description,
+              "sku": item.id, // Use the item's unique ID as the SKU
+              "brand": {
+                "@type": "Brand",
+                "name": "YoSoko"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": window.location.href, // The current page URL
+                "priceCurrency": "TZS", // Tanzanian Shilling
+                "price": item.price,
+                "availability": item.status === 'sold' ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Person",
+                  "name": item.sellerEmail // The seller's email or name
+                }
+              }
+            };
+            // Find the script tag and inject the data as a JSON string
+            document.getElementById('structured-data-product').textContent = JSON.stringify(structuredData);
 
             // --- NEW: Logic to build the image swiper and dots ---
             const images = Array.isArray(item.imageUrls) && item.imageUrls.length > 0 ? item.imageUrls : [item.imageUrl];
