@@ -1109,6 +1109,16 @@
                 DOMElements.mobile.menu.classList.add('hidden');
             });
             const sellAction = () => {
+                // NEW: Check if the user has a phone number
+                if (!state.userData.phone) {
+                    // If no phone number, show the profile modal instead
+                    showToast("Please add your phone number to continue.", "error");
+                    DOMElements.forms.profile.querySelector('#profilePhone').value = '';
+                    toggleModal(DOMElements.modals.profile, true);
+                    return; // Stop the function here
+                }
+
+                // If phone number exists, proceed as normal
                 const form = DOMElements.forms.item;
                 form.reset();
                 form.dataset.mode = state.currentView === 'wanted' ? 'wanted' : 'forSale';
