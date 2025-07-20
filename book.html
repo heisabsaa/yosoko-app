@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Downloading Your Book...</title>
+    <script>
+        // --- CONFIGURATION ---
+        // 1. Replace this URL with the direct link to YOUR PDF file.
+        const pdfUrl = 'assets/ultimate-uni-survival-guide-for-freshers.pdf'; 
+
+        // 2. Set the desired filename for the downloaded file.
+        const fileName = 'The Ultimate Uni Survival Guide for Freshers.pdf';
+        // -------------------
+
+        window.onload = function() {
+            // Create a temporary link element
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = pdfUrl;
+            a.download = fileName; // This attribute triggers the download
+            document.body.appendChild(a);
+
+            // Trigger the download by simulating a click
+            a.click();
+
+            // Clean up by removing the temporary link
+            document.body.removeChild(a);
+
+            // Redirect to the homepage after a short delay
+            // The delay gives the browser time to start the download
+            setTimeout(() => {
+                window.location.href = '/'; // Redirects to your homepage
+            }, 500); // 500 milliseconds delay
+        };
+    </script>
+</head>
+<body>
+    <p>Your download will begin shortly. You will be redirected to the homepage.</p>
+</body>
+</html>
