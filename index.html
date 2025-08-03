@@ -269,7 +269,7 @@
                     </div>
                     <input type="text" id="itemTitle" placeholder="Title (e.g., 'iPhone 11' or 'Graphic Design')" required class="w-full p-2 border rounded">
                     <textarea id="itemDescription" placeholder="Description" required rows="3" class="w-full p-2 border rounded"></textarea>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div id="price-category-wrapper" class="grid grid-cols-2 gap-4">
                         <input type="number" id="itemPrice" placeholder="Price (TSh)" required class="w-full p-2 border rounded">
                         <select id="itemCategory" required class="w-full p-2 border rounded bg-white"></select>
                     </div>
@@ -278,8 +278,8 @@
                         <select id="itemCampus" required class="w-full p-2 border rounded bg-white"></select>
                     </div>                    
                     <div>
-                        <input type="file" id="itemImage" accept="image/*" required multiple class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-semibold file:bg-blue-50 file:text-[var(--primary-blue)] hover:file:bg-blue-100" />
-                        <p class="mt-1 text-xs text-gray-500">You can upload up to 4 images.</p>
+                        <label for="itemImage" class="block text-sm font-medium text-gray-700 mb-1">Upload Images</label>
+                        <input type="file" id="itemImage" accept="image/*" multiple class="w-full p-2 border rounded">
                     </div>
                 </div>
                 <div class="mt-8 flex justify-end space-x-3">
