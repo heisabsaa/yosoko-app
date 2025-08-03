@@ -269,19 +269,17 @@
                     </div>
                     <input type="text" id="itemTitle" placeholder="Title (e.g., 'iPhone 11' or 'Graphic Design')" required class="w-full p-2 border rounded">
                     <textarea id="itemDescription" placeholder="Description" required rows="3" class="w-full p-2 border rounded"></textarea>
-                    <div id="price-category-wrapper" class="grid grid-cols-2 gap-4">
-                        <input type="text" id="itemPrice" placeholder="Price (TSh)" required class="w-full p-2 border rounded">
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="number" id="itemPrice" placeholder="Price (TSh)" required class="w-full p-2 border rounded">
                         <select id="itemCategory" required class="w-full p-2 border rounded bg-white"></select>
                     </div>
                     <div>
-                        <label for="itemCampus" class="block text-sm font-medium text-gray-700 mb-1">Your Campus / Location</label>
-                        <input type="text" id="itemCampus" placeholder="e.g., UDSM, Mlimani City" required class="w-full p-2 border rounded">
-                    </div>
-                    <!-- Add this inside your form, e.g. after the campus/location input -->
+                        <label for="itemCampus" class="block text-sm font-medium text-gray-700 mb-1">Campus Location</label>
+                        <select id="itemCampus" required class="w-full p-2 border rounded bg-white"></select>
+                    </div>                    
                     <div>
-                        <label for="itemImage" class="block text-sm font-medium text-gray-700 mb-1">Upload Images</label>
-                        <input type="file" id="itemImage" accept="image/*" multiple class="w-full p-2 border rounded">
-                        <p class="text-xs text-gray-500 mt-1">You can upload up to 4 images.</p>
+                        <input type="file" id="itemImage" accept="image/*" required multiple class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-semibold file:bg-blue-50 file:text-[var(--primary-blue)] hover:file:bg-blue-100" />
+                        <p class="mt-1 text-xs text-gray-500">You can upload up to 4 images.</p>
                     </div>
                 </div>
                 <div class="mt-8 flex justify-end space-x-3">
@@ -774,10 +772,7 @@
                         <img src="${mainImage}" alt="${item.title}" class="h-full w-full object-contain cursor-pointer item-card-img" data-id="${item.id}">
                     </div>
                     <div class="p-4 cursor-pointer item-card-body" data-id="${item.id}">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-lg font-semibold truncate">${item.title}</h3>
-                            ${item.itemType === 'Service' ? `<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Service</span>` : ''}
-                        </div>
+                        <h3 class="text-lg font-semibold truncate">${item.title}</h3>
                         <p class="text-[var(--primary-blue)] font-bold mt-2 text-xl">${formatPrice(item.price)}</p>
                     </div>
                     ${isOwner ? `
