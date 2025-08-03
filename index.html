@@ -62,7 +62,7 @@
             <div class="flex items-center cursor-pointer" id="home-btn">
                 <img src="images/logo-main.png" alt="YoSoko Logo" class="h-10">
             </div>
-            <h1>YoSoko</h1>
+            <h2>YoSoko</h2>
             <div class="flex md:hidden">
                 <button id="mobileMenuBtn" class="p-2 rounded focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)]">
                     <svg class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -254,19 +254,34 @@
                 <h2 id="itemFormTitle" class="text-2xl font-bold mb-6">List Your Item</h2>
                 <div id="itemFormError" class="hidden bg-red-100 border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
                 <div class="grid grid-cols-1 gap-6">
-                    <input type="text" id="itemTitle" placeholder="Title" required class="w-full p-2 border rounded">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">What are you listing?</label>
+                        <div class="flex items-center space-x-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="itemType" value="Good" checked class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                <span class="ml-2 text-gray-700">A Good (Product)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="itemType" value="Service" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                <span class="ml-2 text-gray-700">A Service / Skill</span>
+                            </label>
+                        </div>
+                    </div>
+                    <input type="text" id="itemTitle" placeholder="Title (e.g., 'iPhone 11' or 'Graphic Design')" required class="w-full p-2 border rounded">
                     <textarea id="itemDescription" placeholder="Description" required rows="3" class="w-full p-2 border rounded"></textarea>
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="number" id="itemPrice" placeholder="Price (TSh)" required class="w-full p-2 border rounded">
+                    <div id="price-category-wrapper" class="grid grid-cols-2 gap-4">
+                        <input type="text" id="itemPrice" placeholder="Price (TSh)" required class="w-full p-2 border rounded">
                         <select id="itemCategory" required class="w-full p-2 border rounded bg-white"></select>
                     </div>
                     <div>
-                        <label for="itemCampus" class="block text-sm font-medium text-gray-700 mb-1">Campus Location</label>
-                        <select id="itemCampus" required class="w-full p-2 border rounded bg-white"></select>
-                    </div>                    
+                        <label for="itemCampus" class="block text-sm font-medium text-gray-700 mb-1">Your Campus / Location</label>
+                        <input type="text" id="itemCampus" placeholder="e.g., UDSM, Mlimani City" required class="w-full p-2 border rounded">
+                    </div>
+                    <!-- Add this inside your form, e.g. after the campus/location input -->
                     <div>
-                        <input type="file" id="itemImage" accept="image/*" required multiple class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-semibold file:bg-blue-50 file:text-[var(--primary-blue)] hover:file:bg-blue-100" />
-                        <p class="mt-1 text-xs text-gray-500">You can upload up to 4 images.</p>
+                        <label for="itemImage" class="block text-sm font-medium text-gray-700 mb-1">Upload Images</label>
+                        <input type="file" id="itemImage" accept="image/*" multiple class="w-full p-2 border rounded">
+                        <p class="text-xs text-gray-500 mt-1">You can upload up to 4 images.</p>
                     </div>
                 </div>
                 <div class="mt-8 flex justify-end space-x-3">
@@ -294,11 +309,6 @@
                         </div>
                 </div>
                 
-                <div>
-                    <h3 class="text-lg font-semibold mb-3 text-gray-700">Campus</h3>
-                    <div id="campus-radio-filters" class="space-y-2">
-                        </div>
-                </div>
 
                 <div class="flex items-center pt-4 border-t">
                     <input type="checkbox" id="showSoldToggleModal" class="h-4 w-4 rounded border-gray-300 text-[var(--primary-blue)] focus:ring-[var(--primary-blue)]">
@@ -341,8 +351,7 @@
           measurementId: "G-T16BXNB1T6"
         };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        const CATEGORIES = ["All", "Books", "Electronics", "Ghetto", "Furniture", "Clothing", "Other"];
-        const CAMPUSES = ["All", "UDSM", "UDOM", "IFM", "TIA", "NIT", "Other"]; // Add this line
+        const CATEGORIES = ["All", "Electronics", "Ghetto", "Furniture", "Clothing", "Books", "Other"];
 
         // --- Firebase Initialization ---
         let app, auth, db;
@@ -731,9 +740,6 @@
                     item.description.toLowerCase().includes(search)
                 );
             }
-            if (state.currentCampus !== 'All') {
-                itemsToRender = itemsToRender.filter(item => item.campus === state.currentCampus);
-            }
             
             
             if (state.currentView === 'wanted') {
@@ -768,7 +774,10 @@
                         <img src="${mainImage}" alt="${item.title}" class="h-full w-full object-contain cursor-pointer item-card-img" data-id="${item.id}">
                     </div>
                     <div class="p-4 cursor-pointer item-card-body" data-id="${item.id}">
-                        <h3 class="text-lg font-semibold truncate">${item.title}</h3>
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-semibold truncate">${item.title}</h3>
+                            ${item.itemType === 'Service' ? `<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Service</span>` : ''}
+                        </div>
                         <p class="text-[var(--primary-blue)] font-bold mt-2 text-xl">${formatPrice(item.price)}</p>
                     </div>
                     ${isOwner ? `
@@ -801,8 +810,11 @@
                         <img src="${mainImage}" alt="${item.title}" class="h-full w-full object-contain cursor-pointer item-card-img" data-id="${item.id}">
                     </div>
                     <div class="p-4 cursor-pointer item-card-body" data-id="${item.id}">
-                        <h3 class="text-lg font-semibold truncate">${item.title}</h3>
-                        <p class="text-[var(--primary-blue)] font-bold mt-2 text-xl">${formatPrice(item.price)}</p>
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-semibold truncate">${item.title}</h3>
+                            ${item.itemType === 'Service' ? `<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Service</span>` : ''}
+                        </div>
+                        <p class="text-[var(--primary-blue)] font-bold mt-2 text-xl">${typeof item.price === 'string' ? item.price : formatPrice(item.price)}</p>
                     </div>
                     ${isOwner ? `
                     <button data-doc-id="${item.id}" class="edit-item-btn absolute bottom-2 right-10 bg-blue-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -990,9 +1002,8 @@
                                 </div>
                                 <div class="p-2">
                                     <p class="font-semibold truncate">${item.title}</p>
-                                    <p class="text-sm text-[var(--primary-blue)]">${formatPrice(item.price)}</p>
-                                </div>
-                            </div>
+                                   
+                                                       </div>
                         `).join('') : '<p>No items for sale.</p>'}
                     </div>
                 </div>
@@ -1017,6 +1028,7 @@
                 if (mode === 'edit') {
                     const docId = form.dataset.editId;
                     const itemData = {
+
                         title: form.querySelector('#itemTitle').value,
                         description: form.querySelector('#itemDescription').value,
                         price: Number(form.querySelector('#itemPrice').value),
@@ -1075,13 +1087,17 @@
                     }
 
                     const newItemData = {
+                        // NEW: Get the selected item type (Good or Service)
+                        itemType: form.querySelector('input[name="itemType"]:checked').value,
                         title: form.querySelector('#itemTitle').value,
                         description: form.querySelector('#itemDescription').value,
-                        price: Number(form.querySelector('#itemPrice').value),
+                        // MODIFIED: Price is now stored as a string to allow for ranges/text
+                        price: form.querySelector('#itemPrice').value,
                         category: form.querySelector('#itemCategory').value,
-                        campus: form.querySelector('#itemCampus').value,
-                        imageUrls: imageUrls, // Store array of URLs
-                        imageUrl: imageUrls[0], // For backward compatibility
+                        // MODIFIED: Get value from text input and convert to uppercase
+                        campus: form.querySelector('#itemCampus').value.toUpperCase(),
+                        imageUrls: imageUrls,
+                        imageUrl: imageUrls[0],
                         sellerId: state.currentUser.uid,
                         sellerEmail: state.currentUser.email,
                         status: 'available',
@@ -1153,16 +1169,10 @@
             });
 
             let lastPath = location.pathname;
-            setInterval(() => {
-                if (location.pathname !== lastPath) {
-                    lastPath = location.pathname;
-                    gtag('event', 'page_view', {
-                        page_path: location.pathname,
-                        page_location: location.href,
-                        page_title: document.title
-                    });
-                }
-            }, 500);
+            gtag('event', 'page_view', {
+                page_location: location.href,
+                page_title: document.title
+            });
 
             // --- MODIFIED --- Mobile menu actions now use requireLogin
             DOMElements.mobile.favoritesBtn.addEventListener('click', () => {
@@ -1231,7 +1241,7 @@
                 form.reset();
                 form.dataset.mode = state.currentView === 'wanted' ? 'wanted' : 'forSale';
                 document.getElementById('itemFormTitle').textContent = state.currentView === 'wanted' ? 'Post a Wanted Ad' : 'List Your Item';
-                document.getElementById('itemPrice').parentElement.style.display = state.currentView === 'wanted' ? 'none' : 'block';
+                document.getElementById('price-category-wrapper').style.display = state.currentView === 'wanted' ? 'none' : 'grid';
                 document.getElementById('itemImage').parentElement.style.display = state.currentView === 'wanted' ? 'none' : 'block';
                 toggleModal(DOMElements.modals.itemForm, true);
             };
@@ -1282,7 +1292,7 @@
             document.getElementById('openFiltersBtn').addEventListener('click', () => {
                 // Pre-select the radio buttons to match the current state
                 document.querySelector(`input[name="categoryFilter"][value="${state.currentCategory}"]`).checked = true;
-                document.querySelector(`input[name="campusFilter"][value="${state.currentCampus}"]`).checked = true;
+                //document.querySelector(`input[name="campusFilter"][value="${state.currentCampus}"]`).checked = true;
                 document.getElementById('showSoldToggleModal').checked = state.showSold;
                 toggleModal(DOMElements.modals.filters, true);
             });
@@ -1488,19 +1498,9 @@
                 </label>
             `).join('');
             document.getElementById('category-radio-filters').innerHTML = categoryRadios;
-
-            const campusRadios = CAMPUSES.map(c => `
-                <label class="flex items-center">
-                    <input type="radio" name="campusFilter" value="${c}" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
-                    <span class="ml-3 text-gray-700">${c}</span>
-                </label>
-            `).join('');
-            document.getElementById('campus-radio-filters').innerHTML = campusRadios;
             // --- End of new part ---
 
             document.getElementById('itemCategory').innerHTML = CATEGORIES.filter(c => c !== 'All').map(c => `<option value="${c}">${c}</option>`).join('');
-            document.getElementById('itemCampus').innerHTML = CAMPUSES.filter(c => c !== 'All').map(c => `<option value="${c}">${c}</option>`).join('');
-
             // This old listener is no longer needed, DELETE IT:
             // DOMElements.categoryFilters.addEventListener('click', ...);
 
