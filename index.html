@@ -51,6 +51,15 @@
         }
         #toast-container .toast-success { background-color: #10B981; } /* Emerald 500 */
         #toast-container .toast-error { background-color: #EF4444; } /* Red 500 */
+        .item-card.animate-in {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .item-card.show {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.2, 0.5, 0.2, 1);
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
@@ -238,6 +247,10 @@
             <button id="closeProfileModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">&times;</button>
             <h2 class="text-2xl font-bold text-center mb-6">My Profile</h2>
             <form id="profileForm">
+                <div class="mb-4">
+                    <label for="profileName" class="block text-sm font-medium text-gray-700">Display Name</label>
+                    <input type="text" id="profileName" placeholder="Your Name" class="mt-1 w-full p-2 border rounded">
+                </div>
                 <div class="mb-4">
                     <label for="profilePhone" class="block text-sm font-medium text-gray-700">Phone Number (for WhatsApp/Call)</label>
                     <input type="tel" id="profilePhone" placeholder="e.g. 0712345678" class="mt-1 w-full p-2 border rounded">
@@ -700,8 +713,8 @@
             if (userDoc.exists()) {
                 state.userData = userDoc.data();
             } else {
-                await setDoc(userDocRef, { email: state.currentUser.email, phone: '', favoriteItems: [] });
-                state.userData = { email: state.currentUser.email, phone: '', favoriteItems: [] };
+                await setDoc(userDocRef, { email: state.currentUser.email, name: '', phone: '', favoriteItems: [] });
+                state.userData = { email: state.currentUser.email, name: '', phone: '', favoriteItems: [] };
             }
         }
 
@@ -773,11 +786,11 @@
             DOMElements.itemsGrid.innerHTML = '';
             if (items.length === 0) { DOMElements.noItems.classList.remove('hidden'); return; }
             DOMElements.noItems.classList.add('hidden');
-            items.forEach(item => {
+            items.forEach((item, index) => {
                 const isOwner = state.currentUser?.uid === item.sellerId;
                 const isFavorite = state.userData.favoriteItems?.includes(item.id);
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-lg shadow-md overflow-hidden group relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1";
+                card.className = "item-card animate-in bg-white rounded-lg shadow-md overflow-hidden group relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1";
                 card.setAttribute('data-id', item.id);
                 // Use first image from imageUrls if available, else fallback to imageUrl
                 const mainImage = Array.isArray(item.imageUrls) && item.imageUrls.length > 0 ? item.imageUrls[0] : item.imageUrl;
@@ -803,17 +816,22 @@
                         <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
                     </button>` : ''}
                 `;
+                // Animate in the cards with a staggered effect
+                setTimeout(() => {
+                    card.classList.add('show');
+                }, index * 100);
                 DOMElements.itemsGrid.appendChild(card);
+                
             });
         }
         
         function renderWantedGrid(items) {
             DOMElements.wantedGrid.innerHTML = '';
-             if (items.length === 0) { DOMElements.noItems.classList.remove('hidden'); return; }
+            if (items.length === 0) { DOMElements.noItems.classList.remove('hidden'); return; }
             DOMElements.noItems.classList.add('hidden');
-            items.forEach(item => {
+            items.forEach((item, index) => {
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-lg shadow-md overflow-hidden p-4 flex flex-col justify-between";
+                card.className = "bg-white rounded-lg shadow-md overflow-hidden p-4 flex flex-col justify-between item-card animate-in";
                 card.innerHTML = `
                     <div class="absolute top-2 right-2 z-10">
                         <button class="favorite-btn p-2 bg-white/70 rounded-full ${isFavorite ? 'saved' : ''}" data-id="${item.id}">
@@ -839,7 +857,10 @@
                         <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
                     </button>` : ''}
                 `;
-                 DOMElements.wantedGrid.appendChild(card);
+                 setTimeout(() => {
+                    card.classList.add('show');
+                }, index * 100);
+                DOMElements.wantedGrid.appendChild(card);
             });
         }
         
@@ -851,10 +872,10 @@
                 return;
             }
 
-            items.forEach(item => {
+            items.forEach((item, index) => {
                 const mainImage = Array.isArray(item.imageUrls) && item.imageUrls.length > 0 ? item.imageUrls[0] : item.imageUrl;
                 const itemElement = document.createElement('div');
-                itemElement.className = 'bg-white rounded-lg shadow-md p-4 flex flex-col sm:flex-row items-center gap-4';
+                itemElement.className = 'bg-white rounded-lg shadow-md p-4 flex flex-col sm:flex-row items-center gap-4 item-card animate-in';
                 itemElement.innerHTML = `
                     <div class="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-gray-100 rounded-md">
                         <img src="${mainImage}" alt="${item.title}" class="w-full h-full object-contain rounded-md" onerror="this.onerror=null;this.src='https://placehold.co/128/e2e8f0/64748b?text=Image';">
@@ -871,6 +892,9 @@
                         <button data-doc-id="${item.id}" class="delete-item-btn bg-red-500 text-white rounded-md px-4 py-2 hover:bg-red-600">Delete</button>
                     </div>
                 `;
+                setTimeout(() => {
+                    itemElement.classList.add('show');
+                }, index * 100);
                 DOMElements.myPostsList.appendChild(itemElement);
             });
         }
@@ -956,7 +980,7 @@
                             <p class="text-gray-600 break-words">${item.description}</p>
                         </div>
                         <div class="border-t pt-3 mt-3">
-                            <p class="text-sm text-gray-600">Seller: <a href="#" class="font-medium text-[var(--primary-blue)] user-link" data-uid="${item.sellerId}">${item.sellerEmail || 'Anonymous'}</a></p>
+                            <p class="text-sm text-gray-600">Seller: <a href="#" class="font-medium text-[var(--primary-blue)] user-link" data-uid="${item.sellerId}">View Profile</a></p>
                         </div>
                         <div class="mt-4 grid grid-cols-2 gap-3">
                             <a href="https://wa.me/255${sellerPhone.substring(1)}" target="_blank" class="w-full text-center bg-green-500 text-white py-2.5 rounded-lg flex items-center justify-center">WhatsApp</a>
@@ -1002,9 +1026,9 @@
 
             DOMElements.modals.userView.querySelector('#userViewContent').innerHTML = `
                 <div class="p-6">
-                    <h2 class="text-2xl font-bold">${userData.email}</h2>
+                    <h2 class="text-2xl font-bold">${userData.name || userData.email}</h2>
                     <div class="flex items-center my-2">
-                        <div class="flex">${[1,2,3,4,5].map(i => `<svg class="h-5 w-5 ${i <= avgRating ? 'text-amber-400' : 'text-gray-300'}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>`).join('')}</div>
+                        <div class="flex">${[1,2,3,4,5].map(i => `<svg class="h-5 w-5 ${i <= avgRating ? 'text-amber-400' : 'text-gray-300'}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>`).join('')}</div>
                         <span class="ml-2 text-sm text-gray-600">(${ratingsSnapshot.size} ratings)</span>
                     </div>
                     <p class="text-gray-700">${userData.phone ? `Phone: ${userData.phone}` : 'No phone number provided'}</p>
@@ -1450,6 +1474,7 @@
             document.body.addEventListener('click', e => {
                 if (e.target.matches('.user-link')) {
                     e.preventDefault();
+                    toggleModal(DOMElements.modals.itemDetail, false);
                     renderUserView(e.target.dataset.uid);
                 }
             });
@@ -1475,7 +1500,11 @@
             });
             DOMElements.forms.profile.addEventListener('submit', async e => {
                 e.preventDefault();
-                await updateDoc(doc(db, `users/${state.currentUser.uid}`), { phone: e.target.elements.profilePhone.value });
+                await updateDoc(doc(db, `users/${state.currentUser.uid}`), { 
+                    name: e.target.elements.profileName.value,
+                    phone: e.target.elements.profilePhone.value 
+                });
+                state.userData.name = e.target.elements.profileName.value;
                 state.userData.phone = e.target.elements.profilePhone.value;
                 toggleModal(DOMElements.modals.profile, false);
             });
