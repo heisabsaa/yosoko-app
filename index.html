@@ -985,7 +985,7 @@
                         <div class="mt-4 grid grid-cols-2 gap-3">
                             <a href="https://wa.me/255${sellerPhone.substring(1)}" target="_blank" class="w-full text-center bg-green-500 text-white py-2.5 rounded-lg flex items-center justify-center">WhatsApp</a>
                             <a href="tel:+255${sellerPhone.substring(1)}" class="w-full text-center bg-gray-600 text-white py-2.5 rounded-lg flex items-center justify-center">Call Seller</a>
-                            ${!isOwner ? `<button id="messageSellerBtn" data-seller-id="${item.sellerId}" data-item-id="${item.id}" data-item-title="${item.title}" data-seller-email="${item.sellerEmail}" class="col-span-2 w-full bg-[var(--primary-blue)] text-white py-2.5 rounded-lg">Message Seller</button>` : ''}
+                            ${!isOwner ? `<a href="sms:+255${sellerPhone.substring(1)}?body=Hello, I'm interested in the item you posted on YoSoko: ${item.title}" class="col-span-2 w-full bg-[var(--primary-blue)] text-white py-2.5 rounded-lg text-center">Message Seller (SMS)</a>` : ''}
                             ${isOwner && item.status !== 'sold' ? `<button id="markAsSoldBtn" data-id="${item.id}" class="col-span-2 w-full bg-amber-500 text-white py-2.5 rounded-lg">Mark as Sold</button>` : ''}
                         </div>
                     </div>
