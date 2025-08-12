@@ -4,85 +4,235 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YoSoko - Admin Panel</title>
+    <link rel="icon" href="images/favicon-96x96.png" type="image/png">
+    <link rel="apple-touch-icon" href="images/favicon-96x96.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-T16BXNB1T6"></script>
     <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-T16BXNB1T6');
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .table-row:hover {
+            background-color: #f9fafb;
+        }
+        .active-tab {
+            border-bottom: 3px solid #3B82F6;
+            color: #3B82F6;
+        }
     </style>
 </head>
-<body class="bg-gray-100">
-
+<body class="bg-gray-50">
     <div id="app-container" class="hidden">
-        <header class="bg-white shadow-md">
-            <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-gray-800">YoSoko Admin</h1>
-                <button id="logoutBtn" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">Logout</button>
+        <!-- Sidebar -->
+        <div class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg sidebar">
+            <div class="flex items-center justify-center h-16 px-4 bg-blue-600">
+                <h1 class="text-xl font-bold text-white">YoSoko Admin</h1>
             </div>
-        </header>
+            <nav class="mt-6 px-4">
+                <div class="space-y-1">
+                    <a href="#" id="dashboard-tab" class="flex items-center px-4 py-3 text-sm font-medium text-gray-900 rounded-lg bg-gray-100 active-tab">
+                        <i class="fas fa-tachometer-alt mr-3 text-blue-600"></i>
+                        Dashboard
+                    </a>
+                    <a href="#" id="items-tab" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100">
+                        <i class="fas fa-box-open mr-3 text-blue-600"></i>
+                        Manage Items
+                    </a>
+                    <a href="#" id="users-tab" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100">
+                        <i class="fas fa-users mr-3 text-blue-600"></i>
+                        Manage Users
+                    </a>
+                    <a href="#" id="reports-tab" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100">
+                        <i class="fas fa-chart-bar mr-3 text-blue-600"></i>
+                        Reports
+                    </a>
+                </div>
+            </nav>
+        </div>
 
-        <main class="container mx-auto p-6">
-            <section id="dashboard" class="mb-8">
-                <h2 class="text-xl font-semibold mb-4 text-gray-700">Dashboard</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-gray-500 text-sm font-medium">Total Users</h3>
-                        <p id="totalUsers" class="text-3xl font-bold text-blue-600 mt-2">...</p>
+        <!-- Main Content -->
+        <div class="ml-64">
+            <!-- Top Navigation -->
+            <header class="bg-white shadow-sm">
+                <div class="flex justify-between items-center px-6 py-4">
+                    <div class="flex items-center">
+                        <button id="mobile-menu-button" class="md:hidden text-gray-500 focus:outline-none">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <h2 id="page-title" class="text-xl font-semibold text-gray-800 ml-4">Dashboard</h2>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-gray-500 text-sm font-medium">Total Items for Sale</h3>
-                        <p id="totalItems" class="text-3xl font-bold text-green-600 mt-2">...</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-gray-500 text-sm font-medium">Items Sold</h3>
-                        <p id="itemsSold" class="text-3xl font-bold text-amber-600 mt-2">...</p>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <i class="fas fa-bell text-gray-500 hover:text-blue-600 cursor-pointer"></i>
+                            <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+                        </div>
+                        <button id="logoutBtn" class="flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                            <i class="fas fa-sign-out-alt mr-2"></i>
+                            Logout
+                        </button>
                     </div>
                 </div>
-            </section>
+            </header>
 
-            <section id="item-management">
-                <h2 class="text-xl font-semibold mb-4 text-gray-700">Manage Items</h2>
-                <div class="bg-white p-4 rounded-lg shadow overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller Email</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price (TSh)</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="itemsTableBody" class="bg-white divide-y divide-gray-200">
-                            <tr><td colspan="5" class="text-center p-4">Loading items...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        </main>
-    </div>
+            <!-- Main Content Area -->
+            <main class="p-6">
+                <!-- Dashboard Section -->
+                <section id="dashboard-section" class="mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="stat-card bg-white p-6 rounded-lg shadow transition">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                                    <i class="fas fa-users text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm font-medium">Total Users</p>
+                                    <p id="totalUsers" class="text-3xl font-bold text-blue-600 mt-1">...</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card bg-white p-6 rounded-lg shadow transition">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                                    <i class="fas fa-box-open text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm font-medium">Total Items</p>
+                                    <p id="totalItems" class="text-3xl font-bold text-green-600 mt-1">...</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card bg-white p-6 rounded-lg shadow transition">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-amber-100 text-amber-600 mr-4">
+                                    <i class="fas fa-check-circle text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm font-medium">Items Sold</p>
+                                    <p id="itemsSold" class="text-3xl font-bold text-amber-600 mt-1">...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-    <div id="auth-container" class="min-h-screen flex items-center justify-center">
-        <div class="text-center">
-            <h2 id="auth-message" class="text-2xl font-bold text-gray-700">Authenticating...</h2>
-            <p id="auth-sub-message" class="text-gray-500 mt-2">Please wait while we check your credentials.</p>
+                    <div class="bg-white p-6 rounded-lg shadow mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
+                        <div id="recent-activity" class="space-y-4">
+                            <div class="flex items-center justify-center py-8">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Items Management Section -->
+                <section id="items-section" class="mb-8 hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800">Manage Items</h3>
+                        <div class="flex space-x-2">
+                            <div class="relative">
+                                <input type="text" id="item-search" placeholder="Search items..." class="pl-10 pr-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </div>
+                            </div>
+                            <select id="item-status-filter" class="border rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="all">All Statuses</option>
+                                <option value="available">Available</option>
+                                <option value="sold">Sold</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsTableBody" class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td colspan="6" class="text-center p-4">
+                                            <div class="flex items-center justify-center py-8">
+                                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200">
+                            <div class="text-sm text-gray-500">
+                                Showing <span id="items-start">1</span> to <span id="items-end">10</span> of <span id="items-total">...</span> items
+                            </div>
+                            <div class="flex space-x-2">
+                                <button id="items-prev" class="px-3 py-1 border rounded-md text-sm disabled:opacity-50" disabled>
+                                    Previous
+                                </button>
+                                <button id="items-next" class="px-3 py-1 border rounded-md text-sm disabled:opacity-50" disabled>
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Users Management Section -->
+                <section id="users-section" class="mb-8 hidden">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Manage Users</h3>
+                        <p class="text-gray-600">User management features coming soon.</p>
+                    </div>
+                </section>
+
+                <!-- Reports Section -->
+                <section id="reports-section" class="mb-8 hidden">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Reports</h3>
+                        <p class="text-gray-600">Reporting features coming soon.</p>
+                    </div>
+                </section>
+            </main>
         </div>
     </div>
 
+    <div id="auth-container" class="min-h-screen flex items-center justify-center bg-gray-50">
+        <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center">
+            <div class="flex justify-center mb-6">
+                <img src="images/logo-main.png" alt="YoSoko Logo" class="h-16">
+            </div>
+            <h2 id="auth-message" class="text-2xl font-bold text-gray-800 mb-2">Authenticating...</h2>
+            <p id="auth-sub-message" class="text-gray-600 mb-6">Please wait while we check your credentials.</p>
+            <div class="flex justify-center">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, getDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, deleteDoc, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Use the EXACT SAME Firebase config from your index.html ---
         const firebaseConfig = {
           apiKey: "AIzaSyCl_we3jgOhq57qofvhfoXZq8K_lIvCp8s",
           authDomain: "yosoko-88982.firebaseapp.com",
@@ -94,123 +244,305 @@
         };
         const appId = 'campus-bazaar-default';
 
-        // --- Firebase Initialization ---
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- DOM Elements ---
+        // DOM Elements
         const appContainer = document.getElementById('app-container');
         const authContainer = document.getElementById('auth-container');
         const authMessage = document.getElementById('auth-message');
         const authSubMessage = document.getElementById('auth-sub-message');
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const sidebar = document.querySelector('.sidebar');
 
-        // --- Security Check ---
+        // Tab management
+        const tabs = {
+            dashboard: document.getElementById('dashboard-tab'),
+            items: document.getElementById('items-tab'),
+            users: document.getElementById('users-tab'),
+            reports: document.getElementById('reports-tab')
+        };
+        
+        const sections = {
+            dashboard: document.getElementById('dashboard-section'),
+            items: document.getElementById('items-section'),
+            users: document.getElementById('users-section'),
+            reports: document.getElementById('reports-section')
+        };
+
+        // Initialize tab switching
+        Object.entries(tabs).forEach(([key, tab]) => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchTab(key);
+            });
+        });
+
+        function switchTab(tabKey) {
+            // Update active tab styling
+            Object.values(tabs).forEach(tab => {
+                tab.classList.remove('bg-gray-100', 'text-gray-900', 'active-tab');
+                tab.classList.add('text-gray-700', 'hover:bg-gray-100');
+            });
+            tabs[tabKey].classList.add('bg-gray-100', 'text-gray-900', 'active-tab');
+            tabs[tabKey].classList.remove('text-gray-700', 'hover:bg-gray-100');
+            
+            // Update visible section
+            Object.values(sections).forEach(section => section.classList.add('hidden'));
+            sections[tabKey].classList.remove('hidden');
+            
+            // Update page title
+            document.getElementById('page-title').textContent = 
+                tabKey.charAt(0).toUpperCase() + tabKey.slice(1).replace('-', ' ');
+            
+            // Load data if needed
+            if (tabKey === 'items') {
+                renderItemsTable();
+            }
+        }
+
+        // Mobile menu toggle
+        mobileMenuButton.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+        });
+
+        // Auth state check
         onAuthStateChanged(auth, async (user) => {
             if (user && !user.isAnonymous) {
-                // User is logged in, check if they are an admin
                 const userDocRef = doc(db, 'users', user.uid);
                 const userDocSnap = await getDoc(userDocRef);
 
                 if (userDocSnap.exists() && userDocSnap.data().isAdmin === true) {
-                    // --- ACCESS GRANTED ---
                     authContainer.classList.add('hidden');
                     appContainer.classList.remove('hidden');
                     initializeAppPanel();
                 } else {
-                    // --- ACCESS DENIED ---
                     authMessage.textContent = '⛔ Access Denied';
-                    authSubMessage.textContent = 'You do not have permission to view this page. Please contact the administrator.';
+                    authSubMessage.innerHTML = 'You do not have permission to view this page.<br>Please contact the administrator.';
+                    document.getElementById('auth-container').classList.remove('bg-gray-50');
+                    document.getElementById('auth-container').classList.add('bg-red-50');
                 }
             } else {
-                // --- NOT LOGGED IN ---
                 authMessage.textContent = 'Login Required';
-                authSubMessage.innerHTML = `Please <a href="/index.html" class="text-blue-500 underline">log in</a> on the main site first and then return to this page.`;
+                authSubMessage.innerHTML = `Please <a href="/index.html" class="text-blue-500 underline">log in</a> first with an admin account.`;
+                document.getElementById('auth-container').classList.remove('bg-gray-50');
+                document.getElementById('auth-container').classList.add('bg-blue-50');
             }
         });
 
-        // --- Main App Logic ---
+        // Main App Logic
         function initializeAppPanel() {
             updateDashboardStats();
-            renderItemsTable();
+            loadRecentActivity();
+            switchTab('dashboard');
 
-            document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                signOut(auth).then(() => {
+                    window.location.href = '/index.html';
+                });
+            });
             
-            // Add event listener for delete buttons (using event delegation)
+            // Item table actions
             document.getElementById('itemsTableBody').addEventListener('click', async (e) => {
                 if (e.target.classList.contains('delete-btn')) {
                     const itemId = e.target.dataset.id;
-                    if (confirm(`Are you sure you want to delete this item? This action cannot be undone.`)) {
+                    if (confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
                         try {
-                            // The path to the items collection
                             const itemDocRef = doc(db, `artifacts/${appId}/public/data/items`, itemId);
                             await deleteDoc(itemDocRef);
-                            alert('Item deleted successfully.');
-                            // Refresh the table and stats
+                            showToast('Item deleted successfully', 'success');
                             renderItemsTable();
                             updateDashboardStats();
                         } catch (error) {
                             console.error("Error deleting item: ", error);
-                            alert('Failed to delete item. Check the console for errors.');
+                            showToast('Failed to delete item', 'error');
                         }
                     }
                 }
             });
+
+            // Item search and filter
+            document.getElementById('item-search').addEventListener('input', (e) => {
+                renderItemsTable(e.target.value);
+            });
+            
+            document.getElementById('item-status-filter').addEventListener('change', (e) => {
+                renderItemsTable(null, e.target.value);
+            });
         }
 
-        // --- Feature #3: Dashboard Stats ---
+        // Dashboard Stats
         async function updateDashboardStats() {
-            // Total Users
-            const usersSnapshot = await getDocs(collection(db, "users"));
-            document.getElementById('totalUsers').textContent = usersSnapshot.size;
+            try {
+                // Total Users
+                const usersSnapshot = await getDocs(collection(db, "users"));
+                document.getElementById('totalUsers').textContent = usersSnapshot.size.toLocaleString();
 
-            // Total Items (path from your index.html)
-            const itemsColRef = collection(db, `artifacts/${appId}/public/data/items`);
-            const itemsSnapshot = await getDocs(itemsColRef);
-            document.getElementById('totalItems').textContent = itemsSnapshot.size;
+                // Total Items
+                const itemsColRef = collection(db, `artifacts/${appId}/public/data/items`);
+                const itemsSnapshot = await getDocs(itemsColRef);
+                document.getElementById('totalItems').textContent = itemsSnapshot.size.toLocaleString();
 
-            // Sold Items
-            const soldQuery = query(itemsColRef, where("status", "==", "sold"));
-            const soldSnapshot = await getDocs(soldQuery);
-            document.getElementById('itemsSold').textContent = soldSnapshot.size;
+                // Sold Items
+                const soldQuery = query(itemsColRef, where("status", "==", "sold"));
+                const soldSnapshot = await getDocs(soldQuery);
+                document.getElementById('itemsSold').textContent = soldSnapshot.size.toLocaleString();
+            } catch (error) {
+                console.error("Error loading dashboard stats:", error);
+            }
         }
 
-        // --- Feature #2: Item Management ---
-        async function renderItemsTable() {
-            const tableBody = document.getElementById('itemsTableBody');
-            const itemsColRef = collection(db, `artifacts/${appId}/public/data/items`);
-            const itemsSnapshot = await getDocs(itemsColRef);
-
-            if (itemsSnapshot.empty) {
-                tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4">No items found.</td></tr>`;
-                return;
-            }
-
-            tableBody.innerHTML = ''; // Clear loading message
-            itemsSnapshot.forEach(doc => {
-                const item = doc.data();
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">${item.title}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-600">${item.sellerEmail}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-600">${Number(item.price).toLocaleString()}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+        // Recent Activity
+        async function loadRecentActivity() {
+            try {
+                const itemsColRef = collection(db, `artifacts/${appId}/public/data/items`);
+                const recentItemsQuery = query(itemsColRef, orderBy("createdAt", "desc"), limit(5));
+                const snapshot = await getDocs(recentItemsQuery);
+                
+                const activityContainer = document.getElementById('recent-activity');
+                activityContainer.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    activityContainer.innerHTML = '<p class="text-gray-500 text-center py-4">No recent activity</p>';
+                    return;
+                }
+                
+                snapshot.forEach(doc => {
+                    const item = doc.data();
+                    const activityItem = document.createElement('div');
+                    activityItem.className = 'flex items-start';
+                    activityItem.innerHTML = `
+                        <div class="flex-shrink-0 bg-blue-100 p-2 rounded-full mr-4">
+                            <i class="fas fa-box-open text-blue-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900">${item.title}</p>
+                            <p class="text-sm text-gray-500">Posted by ${item.sellerEmail}</p>
+                            <p class="text-xs text-gray-400 mt-1">${new Date(item.createdAt?.toDate()).toLocaleString()}</p>
+                        </div>
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.status === 'sold' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
                             ${item.status}
                         </span>
+                    `;
+                    activityContainer.appendChild(activityItem);
+                });
+            } catch (error) {
+                console.error("Error loading recent activity:", error);
+            }
+        }
+
+        // Item Management
+        async function renderItemsTable(searchTerm = null, statusFilter = 'all') {
+            const tableBody = document.getElementById('itemsTableBody');
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center p-4">
+                        <div class="flex items-center justify-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button data-id="${doc.id}" class="delete-btn text-red-600 hover:text-red-900">Delete</button>
-                    </td>
+                </tr>
+            `;
+            
+            try {
+                let itemsQuery = collection(db, `artifacts/${appId}/public/data/items`);
+                
+                if (statusFilter !== 'all') {
+                    itemsQuery = query(itemsQuery, where("status", "==", statusFilter));
+                }
+                
+                if (searchTerm) {
+                    // Note: Firestore doesn't support native full-text search
+                    // This would need to be implemented with a search service like Algolia
+                    // For now, we'll just filter client-side after fetching
+                }
+                
+                itemsQuery = query(itemsQuery, orderBy("createdAt", "desc"));
+                const itemsSnapshot = await getDocs(itemsQuery);
+                
+                if (itemsSnapshot.empty) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center p-8 text-gray-500">
+                                No items found
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tableBody.innerHTML = '';
+                itemsSnapshot.forEach(doc => {
+                    const item = doc.data();
+                    const row = document.createElement('tr');
+                    row.className = 'table-row hover:bg-gray-50 transition';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <img class="h-10 w-10 rounded-md object-cover" src="${item.imageUrl || 'https://placehold.co/400x400/e2e8f0/64748b?text=YoSoko'}" alt="${item.title}">
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">${item.title}</div>
+                                    <div class="text-sm text-gray-500">${item.category || 'No category'}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${item.sellerEmail}</div>
+                            <div class="text-sm text-gray-500">${item.campus || 'Unknown campus'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">TSh ${Number(item.price).toLocaleString()}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.status === 'sold' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
+                                ${item.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${item.createdAt?.toDate().toLocaleDateString()}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button data-id="${doc.id}" class="text-blue-600 hover:text-blue-900 mr-3 view-btn">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button data-id="${doc.id}" class="text-red-600 hover:text-red-900 delete-btn">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                // Update pagination info
+                document.getElementById('items-total').textContent = itemsSnapshot.size.toLocaleString();
+            } catch (error) {
+                console.error("Error loading items:", error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center p-8 text-red-500">
+                            Failed to load items. Please try again.
+                        </td>
+                    </tr>
                 `;
-                tableBody.appendChild(row);
-            });
+            }
+        }
+
+        // Toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-md shadow-lg text-white ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
     </script>
 </body>
