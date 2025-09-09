@@ -389,11 +389,12 @@
             
             // Item table actions
             document.getElementById('itemsTableBody').addEventListener('click', async (e) => {
-                if (e.target.classList.contains('delete-btn')) {
-                    const itemId = e.target.dataset.id;
+                const deleteButton = e.target.closest('.delete-btn');
+                if (deleteButton) {
+                    const itemId = deleteButton.dataset.id;
                     if (confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
                         try {
-                            const itemDocRef = doc(db, `artifacts/${appId}/public/data/items`, itemId);
+                            const itemDocRef = doc(db, "artifacts", appId, "public", "data", "items", itemId);
                             await deleteDoc(itemDocRef);
                             showToast('Item deleted successfully', 'success');
                             renderItemsTable();
@@ -476,6 +477,7 @@
             }
         }
 
+        
         // Item Management
         async function renderItemsTable(searchTerm = null, statusFilter = 'all') {
             const tableBody = document.getElementById('itemsTableBody');
